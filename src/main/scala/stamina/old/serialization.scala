@@ -1,4 +1,6 @@
-package object stamina {
+package stamina
+
+package object old {
   /**
    * Marker trait for event classes that need to be persisted using Akka Persistence.
    * Used by the Akka serialization config to indicate which serializer to use for
@@ -28,7 +30,6 @@ package object stamina {
       rest.foldLeft(first)((accumulator, entry) ⇒ accumulator orElse entry)
     }
   }
-
 
   /**  */
   type ByteString = akka.util.ByteString

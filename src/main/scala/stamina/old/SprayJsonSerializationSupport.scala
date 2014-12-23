@@ -1,4 +1,4 @@
-package stamina
+package stamina.old
 
 import scala.reflect._
 

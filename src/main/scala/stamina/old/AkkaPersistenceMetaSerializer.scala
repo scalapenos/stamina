@@ -1,4 +1,4 @@
-package stamina
+package stamina.old
 
 import java.nio.charset.StandardCharsets._
 import scala.util._

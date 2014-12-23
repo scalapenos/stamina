@@ -1,4 +1,4 @@
-package stamina
+package stamina.old
 
 import org.scalatest._
 

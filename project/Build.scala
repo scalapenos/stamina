@@ -23,6 +23,9 @@ object Build extends Build {
         sprayJson,
         jsonLenses
       ) ++
+      provided(
+        scalaReflect
+      ) ++
       test(
         scalatest
       )
@@ -32,10 +35,10 @@ object Build extends Build {
     "-encoding", "utf8",
     "-target:jvm-1.7",
     "-feature",
-    "-language:implicitConversions",
-    "-language:postfixOps",
     "-unchecked",
     "-deprecation",
+    "-language:_",
+    "-Xlint",
     "-Xlog-reflective-calls"
   )
 
