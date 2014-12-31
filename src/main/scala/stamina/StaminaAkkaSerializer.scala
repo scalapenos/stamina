@@ -1,7 +1,5 @@
 package stamina
 
-import java.nio.charset.StandardCharsets._
-
 import scala.reflect._
 import scala.util._
 
@@ -15,17 +13,13 @@ trait HardcodedByteOrder {
 /**
  * A custom Akka Serializer specifically designed for use with Akka Persistence.
  *
- * It delegates the actual serialization and deserialization out to other code
- * but it stores that serialized data with a key and a version.
+ *
  */
-abstract class StaminaAkkaSerializer extends Serializer with HardcodedByteOrder {
+final class StaminaAkkaSerializer(persisters: Persister) extends Serializer with HardcodedByteOrder {
   import StaminaAkkaSerializer._
 
-  /**
-   * Subclasses should provide a composite instance of Persister to handle
-   * the actual (de)serialization.
-   */
-  def persisters: Persister
+  def this(first: Persister, rest: Persister*) =
+    this(rest.foldLeft(first)((persisters, persister) ⇒ persisters orElse persister))
 
   /** We ddon't need class manifests since we're using more flexible keys. */
   val includeManifest: Boolean = false
@@ -79,6 +73,11 @@ abstract class StaminaAkkaSerializer extends Serializer with HardcodedByteOrder 
 }
 
 object StaminaAkkaSerializer extends HardcodedByteOrder {
+  def apply(persisters: Persister): StaminaAkkaSerializer = new StaminaAkkaSerializer(persisters)
+  def apply(first: Persister, rest: Persister*): StaminaAkkaSerializer = new StaminaAkkaSerializer(first, rest: _*)
+
+  import java.nio.charset.StandardCharsets._
+
   private[stamina] def toBinary(persisted: Persisted): Array[Byte] = {
     val keyBytes = persisted.key.getBytes(UTF_8)
 

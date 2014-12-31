@@ -3,20 +3,16 @@ package stamina
 import org.scalatest._
 
 class StaminaAkkaAserializerWithHighLevelPersisterApiSpec extends WordSpecLike with Matchers with OptionValues with TryValues with Inside with Inspectors {
-  import spray.json._
-  import DefaultJsonProtocol._
-  import SprayJsonEncoding._
   import TestDomain._
+  import SprayJsonEncoding._
 
-  val serializer = new StaminaAkkaSerializer {
-    val persisters = Persister(
-      persister[ItemAdded]("itm-add"),
-      persister[ItemRemoved]("itm-rem"),
-      persister[CartCreated]("crt-new"),
-      persister[CartUpdated]("crt-mod"),
-      persister[CartDestroyed]("crt-rem")
-    )
-  }
+  val serializer = StaminaAkkaSerializer(
+    persister[ItemAdded]("itm-add"),
+    persister[ItemRemoved]("itm-rem"),
+    persister[CartCreated]("crt-new"),
+    persister[CartUpdated]("crt-mod"),
+    persister[CartDestroyed]("crt-rem")
+  )
 
   import serializer._
 

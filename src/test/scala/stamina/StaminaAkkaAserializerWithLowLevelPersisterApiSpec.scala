@@ -6,24 +6,23 @@ class StaminaAkkaAserializerWithLowLevelPersisterApiSpec extends WordSpecLike wi
   import TestDomain._
   import json._
 
-  val serializer = new StaminaAkkaSerializer {
-    val persisters = Persister(
-      toPersisted = {
-        case event: ItemAdded     ⇒ Persisted("itm-add", 1, event.toJsonBytes)
-        case event: ItemRemoved   ⇒ Persisted("itm-rem", 1, event.toJsonBytes)
-        case event: CartCreated   ⇒ Persisted("crt-new", 1, event.toJsonBytes)
-        case event: CartUpdated   ⇒ Persisted("crt-mod", 1, event.toJsonBytes)
-        case event: CartDestroyed ⇒ Persisted("crt-rem", 1, event.toJsonBytes)
-      },
-      fromPersisted = {
-        case Persisted("itm-add", 1, bytes) ⇒ bytes.fromJsonBytes[ItemAdded]
-        case Persisted("itm-rem", 1, bytes) ⇒ bytes.fromJsonBytes[ItemRemoved]
-        case Persisted("crt-new", 1, bytes) ⇒ bytes.fromJsonBytes[CartCreated]
-        case Persisted("crt-mod", 1, bytes) ⇒ bytes.fromJsonBytes[CartUpdated]
-        case Persisted("crt-rem", 1, bytes) ⇒ bytes.fromJsonBytes[CartDestroyed]
-      }
-    )
-  }
+  val serializer = StaminaAkkaSerializer(Persister(
+    toPersisted = {
+      case event: ItemAdded     ⇒ Persisted("itm-add", 1, event.toJsonBytes)
+      case event: ItemRemoved   ⇒ Persisted("itm-rem", 1, event.toJsonBytes)
+      case event: CartCreated   ⇒ Persisted("crt-new", 1, event.toJsonBytes)
+      case event: CartUpdated   ⇒ Persisted("crt-mod", 1, event.toJsonBytes)
+      case event: CartDestroyed ⇒ Persisted("crt-rem", 1, event.toJsonBytes)
+    },
+    fromPersisted = {
+      case Persisted("itm-add", 1, bytes) ⇒ bytes.fromJsonBytes[ItemAdded]
+      case Persisted("itm-rem", 1, bytes) ⇒ bytes.fromJsonBytes[ItemRemoved]
+      case Persisted("crt-new", 1, bytes) ⇒ bytes.fromJsonBytes[CartCreated]
+      case Persisted("crt-mod", 1, bytes) ⇒ bytes.fromJsonBytes[CartUpdated]
+      case Persisted("crt-rem", 1, bytes) ⇒ bytes.fromJsonBytes[CartDestroyed]
+    }
+  )
+  )
 
   import serializer._
 
