@@ -1,17 +1,27 @@
+# Stamina
+Stamina is an Akka Serializer written specifically for use with Akka Persistence. It supports explicit (and implicit) versioning of serialized data, a pluggable type class based model for hooking in serialization libraries, support for migration of older data into your current domain, a testkit, and much more.
+
+Stamina aims to be the serialization toolkit that should have come with Akka PErsistence
 
 
+## Stamina Goals
 
-## goals
+### Major
 
 1. It should support pluggable serialization implementations
 2. It should support code-level configuration options like type classes and macros
-3. It should provide explicit support for versioning serialized data
-4. It should provide explicit and easy to use support for deserializing older versions of stored classes
+3. It should provide explicit support for versioning serialized data (i.e. data is always written together with a version)
+4. It should provide explicit and easy to use support for deserializing older versions of stored classes (i.e. migrations)
+5. It should be highly customizable from code while requiring the least possible amount of boilerplate
+
+### Minor
+
+1. Move away from the cumbersome practise of specifying fully qualified classnames in application.conf. Use of FQCNs lead to weird problems, even when using a single marker trait (i.e. not implementing the Java Serializable interface could lead to the wrong serializer being chosen silently). It's also very inflexible and doesn't leave any space for customization.
 
 
 ## Approach
 
-- Store the data with an explicit key instead of the fully qualified class name to ease refactoring of domain classes/events (i.e a deserializer can be found based purely on the raw serialized data).
+- Store the data together with an explicit key instead of the fully qualified class name to ease refactoring of domain classes/events (i.e a deserializer can be found based purely on the raw serialized data without coupling with the (sometimes outdated) FQCNs).
 - Store the data with an explicit version to ease migration from older versions to the current version (i.e. a migration path can be determined based purely on the raw serialized data).
 - provide a low-level serialization API for turning an instance of some class (essentially an untyped AnyRef) into the combination of a key, a version, and the raw serialized bytes.
 - Provide a low-level deserialization API for turning the combination of a key, a version, and the raw serialized bytes into an instance of some class.
