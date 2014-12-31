@@ -2,32 +2,25 @@ package stamina
 
 import org.scalatest._
 
-class StaminaAkkaAserializerWithLowLevelPersisterApiSpec extends WordSpecLike with Matchers with OptionValues with TryValues with Inside with Inspectors {
+class StaminaAkkaAserializerWithHighLevelPersisterApiSpec extends WordSpecLike with Matchers with OptionValues with TryValues with Inside with Inspectors {
+  import spray.json._
+  import DefaultJsonProtocol._
+  import SprayJsonEncoding._
   import TestDomain._
-  import json._
 
   val serializer = new StaminaAkkaSerializer {
     val persisters = Persister(
-      toPersisted = {
-        case event: ItemAdded     ⇒ Persisted("itm-add", 1, event.toJsonBytes)
-        case event: ItemRemoved   ⇒ Persisted("itm-rem", 1, event.toJsonBytes)
-        case event: CartCreated   ⇒ Persisted("crt-new", 1, event.toJsonBytes)
-        case event: CartUpdated   ⇒ Persisted("crt-mod", 1, event.toJsonBytes)
-        case event: CartDestroyed ⇒ Persisted("crt-rem", 1, event.toJsonBytes)
-      },
-      fromPersisted = {
-        case Persisted("itm-add", 1, bytes) ⇒ bytes.fromJsonBytes[ItemAdded]
-        case Persisted("itm-rem", 1, bytes) ⇒ bytes.fromJsonBytes[ItemRemoved]
-        case Persisted("crt-new", 1, bytes) ⇒ bytes.fromJsonBytes[CartCreated]
-        case Persisted("crt-mod", 1, bytes) ⇒ bytes.fromJsonBytes[CartUpdated]
-        case Persisted("crt-rem", 1, bytes) ⇒ bytes.fromJsonBytes[CartDestroyed]
-      }
+      persister[ItemAdded]("itm-add"),
+      persister[ItemRemoved]("itm-rem"),
+      persister[CartCreated]("crt-new"),
+      persister[CartUpdated]("crt-mod"),
+      persister[CartDestroyed]("crt-rem")
     )
   }
 
   import serializer._
 
-  "The StaminaAkkaSerializer, using the low-level Persister API" should {
+  "The StaminaAkkaSerializer, using the high-level persister API" should {
     "correctly serialize and deserialize the current version of the domain" in {
       fromBinary(toBinary(itemAdded)) should equal(itemAdded)
       fromBinary(toBinary(itemRemoved)) should equal(itemRemoved)

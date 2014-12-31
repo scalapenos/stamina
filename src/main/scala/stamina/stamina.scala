@@ -44,7 +44,8 @@ package stamina {
    *
    */
   case class Persister(toPersisted: ToPersisted, fromPersisted: FromPersisted) {
-    def orElse(other: Persister) = Persister(
+    def ||(other: Persister) = orElse(other)
+    def orElse(other: Persister): Persister = Persister(
       this.toPersisted orElse other.toPersisted,
       this.fromPersisted orElse other.fromPersisted
     )

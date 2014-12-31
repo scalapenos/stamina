@@ -25,7 +25,7 @@ abstract class StaminaAkkaSerializer extends Serializer with HardcodedByteOrder 
    * Subclasses should provide a composite instance of Persister to handle
    * the actual (de)serialization.
    */
-  def persister: Persister
+  def persisters: Persister
 
   /** We ddon't need class manifests since we're using more flexible keys. */
   val includeManifest: Boolean = false
@@ -41,12 +41,12 @@ abstract class StaminaAkkaSerializer extends Serializer with HardcodedByteOrder 
    *   - version (4 bytes)
    *   - persisted data (n bytes)
    *
-   * @throws UnregistredTypeException when the specified object is not supported by the persister.
+   * @throws UnregistredTypeException when the specified object is not supported by the persisters.
    */
   def toBinary(obj: AnyRef): Array[Byte] = {
-    if (!persister.canPersist(obj)) throw UnregistredTypeException(obj)
+    if (!persisters.canPersist(obj)) throw UnregistredTypeException(obj)
 
-    StaminaAkkaSerializer.toBinary(persister.toPersisted(obj))
+    StaminaAkkaSerializer.toBinary(persisters.toPersisted(obj))
   }
 
   /**
@@ -69,9 +69,9 @@ abstract class StaminaAkkaSerializer extends Serializer with HardcodedByteOrder 
     val version = versionBytes.iterator.getInt
     val persisted = Persisted(key, version, data)
 
-    if (!persister.canRecover(persisted)) throw UnregisteredKeyException(key)
+    if (!persisters.canRecover(persisted)) throw UnregisteredKeyException(key)
 
-    Try(persister.fromPersisted(persisted)) match {
+    Try(persisters.fromPersisted(persisted)) match {
       case Success(deserialized) ⇒ deserialized
       case Failure(error)        ⇒ throw new UnrecoverableDataException(persisted, error)
     }

@@ -38,3 +38,4 @@ trait TestDomain {
   implicit val cartDestroyedFormat = jsonFormat1(CartDestroyed)
 }
 
+object TestDomain extends TestDomain
