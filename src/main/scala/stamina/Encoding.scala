@@ -9,7 +9,7 @@ trait Encoding[T] {
 import json._
 import spray.json._
 
-object SprayJsonEncoding extends SprayJsonMacros {
+object SprayJsonEncoding extends SprayJsonFormats {
   implicit def bridge[T: RootJsonFormat]: Encoding[T] = new Encoding[T] {
     private val format = implicitly[RootJsonFormat[T]]
     def encode(t: T): ByteString = ByteString(format.write(t).compactPrint)

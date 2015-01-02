@@ -4,17 +4,17 @@ import spray.json._
 import scala.language.experimental.macros
 import scala.reflect.macros.blackbox.Context
 
-trait SprayJsonMacros extends DefaultJsonProtocol with LowPrioritySprayJsonMacros
-object SprayJsonMacros extends SprayJsonMacros
+trait SprayJsonFormats extends DefaultJsonProtocol with LowPrioritySprayJsonFormats
+object SprayJsonFormats extends SprayJsonFormats
 
-trait LowPrioritySprayJsonMacros {
+trait LowPrioritySprayJsonFormats {
   // TODO: better way to recognize case classes in the type
   //       signature in order to prevent compiler errors when
   //       encountering non-case classes.
-  implicit def caseClassRootJsonFormat[T <: Product]: RootJsonFormat[T] = macro SprayJsonMacroImplementations.materializeRootJsonFormat[T]
+  implicit def caseClassRootJsonFormat[T <: Product]: RootJsonFormat[T] = macro SprayJsonMacros.materializeRootJsonFormat[T]
 }
 
-object SprayJsonMacroImplementations {
+object SprayJsonMacros {
   def materializeRootJsonFormat[T: c.WeakTypeTag](c: Context) = {
     import c.universe._
 
@@ -30,34 +30,10 @@ object SprayJsonMacroImplementations {
     val methodNames = methods.map(m ⇒ q"${m.name.toString}")
     val tpeCompanion = tpe.typeSymbol.companion
     val imports = q"import spray.json._"
-    val res = q"""
+
+    q"""
       $imports
       jsonFormat(${tpeCompanion}, ..$methodNames)
     """
-
-    // val methodNames = methods.map(method ⇒ q"${method.name}")
-    // val methodNameStrings = methods.map(method ⇒ q"${method.name.toString}")
-    // val fieldWriters = methods.map(method ⇒ q"(${method.name.toString}, value.${method.name}.toJson)")
-    // val fieldReaders = methods.map(method ⇒ q"${method.name}.convertTo[${method.returnType}]")
-
-    // val res = q"""
-    // $imports1
-    // $imports2
-    // new RootJsonFormat[$tpe] {
-    //   def write(value: $tpe): JsValue = {
-    //     JsObject(..$fieldWriters)
-    //   }
-    //   def read(value: JsValue): $tpe = {
-    //     value.asJsObject.getFields(..${methodNameStrings}) match {
-    //       case Seq(..$methodNames) ⇒ ${tpeCompanion}(..${fieldReaders})
-    //       case _ ⇒ throw new DeserializationException("Could not produce an instance of T from the following JSON: " + value)
-    //     }
-    //   }
-    // }
-    // """
-
-    // println(showCode(res))
-
-    res
   }
 }
