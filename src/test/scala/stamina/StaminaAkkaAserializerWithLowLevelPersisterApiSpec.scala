@@ -5,6 +5,7 @@ import org.scalatest._
 class StaminaAkkaAserializerWithLowLevelPersisterApiSpec extends WordSpecLike with Matchers with OptionValues with TryValues with Inside with Inspectors {
   import TestDomain._
   import json._
+  import SprayJsonMacros._
 
   val serializer = StaminaAkkaSerializer(Persister(
     toPersisted = {

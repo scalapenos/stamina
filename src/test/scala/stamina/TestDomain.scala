@@ -1,6 +1,6 @@
 package stamina
 
-trait TestDomain {
+object TestDomain {
   type ItemId = Int
   type CartId = Int
 
@@ -25,17 +25,4 @@ trait TestDomain {
   val cartCreated = CartCreated(cart)
   val cartUpdated = CartUpdated(cart)
   val cartDestroyed = CartDestroyed(cart)
-
-  // TODO: remove these as soon as we have our macro implementation
-  import spray.json._
-  import DefaultJsonProtocol._
-  implicit val itemFormat = jsonFormat2(Item)
-  implicit val cartFormat = jsonFormat2(Cart)
-  implicit val itemAddedFormat = jsonFormat1(ItemAdded)
-  implicit val itemRemovedFormat = jsonFormat1(ItemRemoved)
-  implicit val cartCreatedFormat = jsonFormat1(CartCreated)
-  implicit val cartUpdatedFormat = jsonFormat1(CartUpdated)
-  implicit val cartDestroyedFormat = jsonFormat1(CartDestroyed)
 }
-
-object TestDomain extends TestDomain
