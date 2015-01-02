@@ -19,21 +19,16 @@ object SprayJsonMacros {
     import c.universe._
 
     val tpe = weakTypeOf[T]
-    val methods = tpe.decls.toList collect {
-      case method: MethodSymbol if method.isCaseAccessor ⇒ method
+    val methodNames = tpe.decls.toList collect {
+      case method: MethodSymbol if method.isCaseAccessor ⇒ q"${method.name.toString}"
     }
 
-    if (methods.length < 1) {
+    if (methodNames.length < 1) {
       c.abort(c.enclosingPosition, s"${tpe} is not a case class. SprayJsonMacros can only generate a RootJsonFormat[T] for case classes!")
     }
 
-    val methodNames = methods.map(m ⇒ q"${m.name.toString}")
-    val tpeCompanion = tpe.typeSymbol.companion
-    val imports = q"import spray.json._"
-
     q"""
-      $imports
-      jsonFormat(${tpeCompanion}, ..$methodNames)
+      jsonFormat(${tpe.typeSymbol.companion}, ..$methodNames)
     """
   }
 }
