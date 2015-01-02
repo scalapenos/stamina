@@ -4,7 +4,7 @@ import org.scalatest._
 
 class StaminaAkkaAserializerWithHighLevelPersisterApiSpec extends WordSpecLike with Matchers with OptionValues with TryValues with Inside with Inspectors {
   import TestDomain._
-  import SprayJsonEncoding._
+  import json.SprayJsonEncoding._
 
   val serializer = StaminaAkkaSerializer(
     persister[ItemAdded]("itm-add"),
