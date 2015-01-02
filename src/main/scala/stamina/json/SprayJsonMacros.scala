@@ -27,8 +27,6 @@ object SprayJsonMacros {
       c.abort(c.enclosingPosition, s"${tpe} is not a case class. SprayJsonMacros can only generate a RootJsonFormat[T] for case classes!")
     }
 
-    q"""
-      jsonFormat(${tpe.typeSymbol.companion}, ..$methodNames)
-    """
+    q"jsonFormat(${tpe.typeSymbol.companion}, ..$methodNames)"
   }
 }
