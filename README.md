@@ -1,7 +1,7 @@
 # Stamina
 Stamina is an Akka Serializer written specifically for use with Akka Persistence. It supports explicit (and implicit) versioning of serialized data, a pluggable type class based model for hooking in serialization libraries, support for migration of older data into your current domain, a testkit, and much more.
 
-Stamina aims to be the serialization toolkit that should have come with Akka PErsistence
+Stamina aims to be the serialization toolkit that should have come with Akka Persistence but didn't.
 
 
 ## Stamina Goals
