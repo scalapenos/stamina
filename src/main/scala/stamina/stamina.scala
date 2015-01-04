@@ -12,26 +12,42 @@ package object stamina {
    * Creates a basic, single-version persister using the specified key and
    * an implicit Encoding. The default version is 1.
    */
-  def persister[T <: AnyRef: Encoding: ClassTag](key: String, version: Int = 1): Persister = Persister(
-    toPersisted = {
-      case t: T ⇒ Persisted(key, version, implicitly[Encoding[T]].encode(t))
-    },
-    fromPersisted = {
-      case Persisted(k, v, bytes) if k == key && v == version ⇒ implicitly[Encoding[T]].decode(bytes)
-    }
-  )
+  def persister[T <: AnyRef: Encoding: ClassTag](key: String, version: Int = 1): Persister = {
+    val encoding = implicitly[Encoding[T]]
+    Persister(
+      toPersisted = {
+        case t: T ⇒ Persisted(key, version, encoding.encode(t))
+      },
+      fromPersisted = {
+        case Persisted(k, v, bytes) if k == key && v == version ⇒ encoding.decode(bytes)
+      }
+    )
+  }
+
+  //TODO: a version of persister for case objects?
+
 }
 
 package stamina {
   /**
-   * Marker trait for classes that need to be persisted using Akka Persistence.
-   * Used by the Akka serialization config to indicate which serializer to use for
-   * persistentable classes.
+   * Marker trait for classes that should be persisted using the StaminaAkkaSerializer.
+   *
+   * Unforntunately we still need to indicate to Akka which classes should be persisted
+   * with which Serializer. This marker trait can be used to mark all your top-level
+   * persistable classes (i.e. events, snapshots, etc.) so that you will only need a few
+   * lines of configuration in your application.conf, namely:
+   *
+   * akka.actor.serializers.stamina = <FQCN of your subclass of StaminaAkkaSerializer>
+   * akka.actor.serialization-bindings {
+   *   "stamina.Persistable" = stamina
+   * }
+   *
    */
   trait Persistable extends java.io.Serializable
 
   /**
-   *
+   * A simple container holding a persistence key, a version number, and the raw
+   * serialized/encoded bytes.
    */
   case class Persisted(key: String, version: Int, bytes: ByteString)
 
