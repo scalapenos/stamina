@@ -4,7 +4,6 @@ package json
 import org.scalatest._
 
 class SprayJsonPersistenceSpec extends WordSpecLike with Matchers with OptionValues with TryValues with Inside with Inspectors {
-  import Versions._
   import TestDomain._
   import SprayJsonFormats._
   import SprayJsonPersistence._

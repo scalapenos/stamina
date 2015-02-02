@@ -1,6 +1,5 @@
 package stamina
 
-import json.Versions._
 import json.SprayJsonFormats._
 import json.SprayJsonPersistence._
 import spray.json.lenses.JsonLenses._

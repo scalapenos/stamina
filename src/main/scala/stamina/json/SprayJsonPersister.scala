@@ -1,40 +1,11 @@
 package stamina
 package json
 
-object Versions {
-  sealed abstract class Version
-
-  @annotation.implicitNotFound(msg = "Cannot find VersionInfo type class for ${V}")
-  abstract class VersionInfo[V <: Version](val versionNumber: Int)
-
-  @annotation.implicitNotFound(msg = "Cannot find proof that ${V} is a migratable version (i.e. it is higher than V1)")
-  sealed trait Migratable[V <: Version]
-
-  @annotation.implicitNotFound(msg = "Cannot find proof that ${A} is the next version after ${B}")
-  sealed trait IsNextAfter[A <: Version, B <: Version]
-
-  def versionNumber[V <: Version: VersionInfo]: Int = implicitly[VersionInfo[V]].versionNumber
-
-  class V1 extends Version
-  case object V1 extends V1 {
-    implicit object Info extends VersionInfo[V1](1)
-  }
-
-  class V2 extends Version
-  case object V2 extends V2 {
-    implicit object Info extends VersionInfo[V2](2) with Migratable[V2] with IsNextAfter[V2, V1]
-  }
-
-  class V3 extends Version
-  case object V3 extends V3 {
-    implicit object Info extends VersionInfo[V3](3) with Migratable[V3] with IsNextAfter[V3, V2]
-  }
-}
-
 object SprayJsonPersistence {
   import scala.reflect.ClassTag
   import spray.json._
-  import Versions._
+
+  private def versionNumber[V <: Version: VersionInfo]: Int = implicitly[VersionInfo[V]].versionNumber
 
   type JsonMigration = JsValue ⇒ JsValue
   object JsonMigration {
