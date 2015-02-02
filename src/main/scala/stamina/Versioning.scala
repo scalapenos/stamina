@@ -18,6 +18,10 @@ sealed trait Migratable[V <: Version]
 @annotation.implicitNotFound(msg = "Cannot find proof that ${A} is the next version after ${B}")
 sealed trait IsNextAfter[A <: Version, B <: Version]
 
+object Version {
+  def numberFor[V <: Version: VersionInfo]: Int = implicitly[VersionInfo[V]].versionNumber
+}
+
 class V1 extends Version
 object V1 {
   implicit object Info extends VersionInfo[V1](1)

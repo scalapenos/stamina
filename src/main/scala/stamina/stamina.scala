@@ -40,6 +40,37 @@ package stamina {
   /**
    *
    */
+  abstract class Persister2[T: ClassTag, V <: Version: VersionInfo](val key: String) {
+    lazy val version = Version.numberFor[V]
+
+    def canPersist(a: AnyRef): Boolean = a match {
+      case t: T ⇒ true
+      case _    ⇒ false
+    }
+
+    def canUnpersist(p: Persisted): Boolean
+
+    def persist(t: T): Persisted
+    def unpersist(persisted: Persisted): T
+  }
+
+  case class Persisters(persisters: List[Persister2[_, _]]) {
+    def canPersist(a: AnyRef): Boolean = persisters.exists(_.canPersist(a))
+    def canUnpersist(p: Persisted): Boolean = persisters.exists(_.canUnpersist(p))
+
+    // def persist(a: AnyRef): Persisted = persisters.find(_.canPersist(a)).map(_.persist(a)).getOrElse(throw new IllegalArgumentException("Persisters.persist"))
+    // def unpersist(persisted: Persisted): T
+  }
+
+  object Persisters {
+    def apply[T: ClassTag, V <: Version: VersionInfo](persister: Persister2[T, V]): Persisters = apply(List(persister))
+    def apply(first: Persister2[_, _], rest: Persister2[_, _]*): Persisters = apply(first :: rest.toList)
+  }
+
+  /**
+   *
+   */
+  @deprecated(message = "Don't use it!", since = "recently")
   case class Persister(toPersisted: ToPersisted, fromPersisted: FromPersisted) {
     def ||(other: Persister) = orElse(other)
     def orElse(other: Persister): Persister = Persister(

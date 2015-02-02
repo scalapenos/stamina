@@ -5,9 +5,7 @@ import org.scalatest._
 
 class SprayJsonPersistenceSpec extends WordSpecLike with Matchers with OptionValues with TryValues with Inside with Inspectors {
   import TestDomain._
-  import SprayJsonFormats._
   import SprayJsonPersistence._
-  import spray.json.lenses.JsonLenses._
 
   "V1 persisters produced by SprayJsonPersister" should {
     "correctly persist and unpersist domain events " in {
