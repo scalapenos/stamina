@@ -7,26 +7,6 @@ package object stamina {
   /**  */
   type ByteString = akka.util.ByteString
   val ByteString = akka.util.ByteString
-
-  /**
-   * Creates a basic, single-version persister using the specified key and
-   * an implicit Encoding. The default version is 1.
-   */
-  def persisterOld[T <: AnyRef: Encoding: ClassTag](key: String, version: Int = 1): Persister = {
-    val encoding = implicitly[Encoding[T]]
-
-    Persister(
-      toPersisted = {
-        case t: T ⇒ Persisted(key, version, encoding.encode(t))
-      },
-      fromPersisted = {
-        case Persisted(k, v, bytes) if k == key && v == version ⇒ encoding.decode(bytes)
-      }
-    )
-  }
-
-  //TODO: a version of persister for case objects?
-
 }
 
 package stamina {
