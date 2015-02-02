@@ -14,6 +14,7 @@ package object stamina {
    */
   def persister[T <: AnyRef: Encoding: ClassTag](key: String, version: Int = 1): Persister = {
     val encoding = implicitly[Encoding[T]]
+
     Persister(
       toPersisted = {
         case t: T ⇒ Persisted(key, version, encoding.encode(t))
