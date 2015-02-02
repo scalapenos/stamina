@@ -11,8 +11,7 @@ package object json {
   }
 
   implicit class ByteStringWithRootJsonReaderSupport(val bytes: ByteString) extends AnyVal {
-    def fromJsonBytes[T](implicit reader: RootJsonReader[T]): T = {
-      reader.read(JsonParser(ParserInput(bytes.toArray)))
-    }
+    def parseJson = JsonParser(ParserInput(bytes.toArray))
+    def fromJsonBytes[T](implicit reader: RootJsonReader[T]): T = reader.read(parseJson)
   }
 }
