@@ -7,22 +7,14 @@ class StaminaAkkaAserializerWithHighLevelPersisterApiSpec extends WordSpecLike w
   import json.SprayJsonEncoding._
 
   val serializer = StaminaAkkaSerializer(
-    persister[ItemAdded]("itm-add"),
-    persister[ItemRemoved]("itm-rem"),
-    persister[CartCreated]("crt-new"),
-    persister[CartUpdated]("crt-mod"),
-    persister[CartDestroyed]("crt-rem")
+    persisterOld[CartCreated]("crt-new")
   )
 
   import serializer._
 
   "The StaminaAkkaSerializer, using the high-level persister API" should {
     "correctly serialize and deserialize the current version of the domain" in {
-      fromBinary(toBinary(itemAdded)) should equal(itemAdded)
-      fromBinary(toBinary(itemRemoved)) should equal(itemRemoved)
       fromBinary(toBinary(cartCreated)) should equal(cartCreated)
-      fromBinary(toBinary(cartUpdated)) should equal(cartUpdated)
-      fromBinary(toBinary(cartDestroyed)) should equal(cartDestroyed)
     }
 
     "throw an UnregistredTypeException when serializing an unregistered type" in {

@@ -9,18 +9,10 @@ class StaminaAkkaAserializerWithLowLevelPersisterApiSpec extends WordSpecLike wi
 
   val serializer = StaminaAkkaSerializer(Persister(
     toPersisted = {
-      case event: ItemAdded     ⇒ Persisted("itm-add", 1, event.toJsonBytes)
-      case event: ItemRemoved   ⇒ Persisted("itm-rem", 1, event.toJsonBytes)
-      case event: CartCreated   ⇒ Persisted("crt-new", 1, event.toJsonBytes)
-      case event: CartUpdated   ⇒ Persisted("crt-mod", 1, event.toJsonBytes)
-      case event: CartDestroyed ⇒ Persisted("crt-rem", 1, event.toJsonBytes)
+      case event: CartCreated ⇒ Persisted("crt-new", 1, event.toJsonBytes)
     },
     fromPersisted = {
-      case Persisted("itm-add", 1, bytes) ⇒ bytes.fromJsonBytes[ItemAdded]
-      case Persisted("itm-rem", 1, bytes) ⇒ bytes.fromJsonBytes[ItemRemoved]
       case Persisted("crt-new", 1, bytes) ⇒ bytes.fromJsonBytes[CartCreated]
-      case Persisted("crt-mod", 1, bytes) ⇒ bytes.fromJsonBytes[CartUpdated]
-      case Persisted("crt-rem", 1, bytes) ⇒ bytes.fromJsonBytes[CartDestroyed]
     }
   )
   )
@@ -29,11 +21,7 @@ class StaminaAkkaAserializerWithLowLevelPersisterApiSpec extends WordSpecLike wi
 
   "The StaminaAkkaSerializer, using the low-level Persister API" should {
     "correctly serialize and deserialize the current version of the domain" in {
-      fromBinary(toBinary(itemAdded)) should equal(itemAdded)
-      fromBinary(toBinary(itemRemoved)) should equal(itemRemoved)
       fromBinary(toBinary(cartCreated)) should equal(cartCreated)
-      fromBinary(toBinary(cartUpdated)) should equal(cartUpdated)
-      fromBinary(toBinary(cartDestroyed)) should equal(cartDestroyed)
     }
 
     "throw an UnregistredTypeException when serializing an unregistered type" in {

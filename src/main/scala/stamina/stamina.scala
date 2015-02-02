@@ -12,7 +12,7 @@ package object stamina {
    * Creates a basic, single-version persister using the specified key and
    * an implicit Encoding. The default version is 1.
    */
-  def persister[T <: AnyRef: Encoding: ClassTag](key: String, version: Int = 1): Persister = {
+  def persisterOld[T <: AnyRef: Encoding: ClassTag](key: String, version: Int = 1): Persister = {
     val encoding = implicitly[Encoding[T]]
 
     Persister(
