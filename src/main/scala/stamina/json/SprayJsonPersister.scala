@@ -5,36 +5,34 @@ object Versions {
   sealed abstract class Version
 
   @annotation.implicitNotFound(msg = "Cannot find VersionInfo type class for ${V}")
-  sealed trait VersionInfo[V <: Version] {
-    def versionNumber: Int
-  }
+  abstract class VersionInfo[V <: Version](val versionNumber: Int)
+
+  @annotation.implicitNotFound(msg = "Cannot find proof that ${V} is a migratable version (i.e. it is higher than V1)")
+  sealed trait Migratable[V <: Version]
+
+  @annotation.implicitNotFound(msg = "Cannot find proof that ${A} is the next version after ${B}")
+  sealed trait IsNextAfter[A <: Version, B <: Version]
 
   def versionNumber[V <: Version: VersionInfo]: Int = implicitly[VersionInfo[V]].versionNumber
 
-  abstract class VersionInfoImpl[V <: Version](val versionNumber: Int) extends VersionInfo[V]
-
-  @annotation.implicitNotFound(msg = "Cannot find proof that ${A} is the next version after ${B}")
-  sealed trait IsNextVersionAfter[A <: Version, B <: Version]
-
   class V1 extends Version
   case object V1 extends V1 {
-    implicit object Info extends VersionInfoImpl[V1](1)
+    implicit object Info extends VersionInfo[V1](1)
   }
 
   class V2 extends Version
   case object V2 extends V2 {
-    implicit object Info extends VersionInfoImpl[V2](2)
-    implicit object V2IsNextVersionAfterV1 extends IsNextVersionAfter[V2, V1]
+    implicit object Info extends VersionInfo[V2](2) with Migratable[V2] with IsNextAfter[V2, V1]
   }
 
   class V3 extends Version
   case object V3 extends V3 {
-    implicit object Info extends VersionInfoImpl[V3](3)
-    implicit object V3IsNextVersionAfterV2 extends IsNextVersionAfter[V3, V2]
+    implicit object Info extends VersionInfo[V3](3) with Migratable[V3] with IsNextAfter[V3, V2]
   }
 }
 
 object SprayJsonPersistence {
+  import scala.reflect.ClassTag
   import spray.json._
   import Versions._
 
@@ -54,9 +52,9 @@ object SprayJsonPersistence {
       )
     }
 
-    def to[HigherV <: Version: VersionInfo](migration: JsonMigration)(implicit isHigherThan: IsNextVersionAfter[HigherV, V]): JsonMigrator[HigherV] = {
+    def to[HigherV <: Version: VersionInfo](migration: JsonMigration)(implicit isHigherThan: IsNextAfter[HigherV, V]): JsonMigrator[HigherV] = {
       val updatedOldMigrations: Map[Int, JsonMigration] = migrations.mapValues(_ && migration)
-      val newMigrations = updatedOldMigrations + (versionNumber[HigherV] -> migration)
+      val newMigrations = updatedOldMigrations + (versionNumber[HigherV] -> JsonMigration.Identity)
 
       new JsonMigrator[HigherV](newMigrations)
     }
@@ -64,79 +62,39 @@ object SprayJsonPersistence {
 
   def from[V <: V1: VersionInfo] = new JsonMigrator[V](Map(versionNumber[V] -> JsonMigration.Identity))
 
-  trait JsonPersister[T, V <: Version]
+  abstract class JsonPersister[T: RootJsonFormat: ClassTag, V <: Version: VersionInfo](key: String) {
+    protected lazy val version = versionNumber[V]
 
-  // def persister[T: RootJsonFormat](key: String): JsonPersister[T, V1] = new JsonPersister[T, V1] {}
-  // def persister[T: RootJsonFormat, V <: Version](key: String, migrator: JsonMigrator[V]): JsonPersister[T, V] = new JsonPersister[T, V] {}
+    def canPersist(a: AnyRef): Boolean = a match {
+      case t: T ⇒ true
+      case _    ⇒ false
+    }
 
-  /*
-    json deserializer(key):
+    def canUnpersist(p: Persisted): Boolean = p.key == key && p.version == version
 
-    - if key matches
-      - parse contents into JsValue
-      - migrator(value, version) // produces a new JsValue
-      - transform new JsValue into T using the RootJsonFormat
+    def persist(t: T): Persisted
+    def unpersist(persisted: Persisted): T
+  }
 
-   */
+  class V1JsonPersister[T: RootJsonFormat: ClassTag, V <: V1: VersionInfo](key: String) extends JsonPersister[T, V](key) {
+    def persist(t: T): Persisted = Persisted(key, version, t.toJsonBytes)
+    def unpersist(p: Persisted): T = {
+      if (p.key == key && p.version == version) p.bytes.fromJsonBytes[T]
+      else throw new IllegalArgumentException(s"V1JsonPersister: $p.key was not equal to $key and/or $p.version was not equal to ${version}.")
+    }
+  }
 
-  // ==========================================================================
-  // Examples
-  // ==========================================================================
+  def persister[T: RootJsonFormat: ClassTag](key: String): JsonPersister[T, V1] = new V1JsonPersister[T, V1](key)
 
-  import spray.json.lenses.JsonLenses._
-  import SprayJsonFormats._
+  class VnJsonPersister[T: RootJsonFormat: ClassTag, V <: Version: VersionInfo: Migratable](key: String, migrator: JsonMigrator[V]) extends JsonPersister[T, V](key) {
+    def persist(t: T): Persisted = Persisted(key, version, t.toJsonBytes)
+    def unpersist(p: Persisted): T = {
+      if (p.key != key) throw new IllegalArgumentException(s"VnJsonPersister: ${p.key} was not equal to ${key}.")
+      else {
+        migrator.migrate(p.bytes.parseJson, p.version).convertTo[T]
+      }
+    }
+  }
 
-  def bla(migration: JsonMigration) = 42
-  val blam: JsonMigration = _.update('blam ! set("Blam!"))
-  val blim: JsonMigration = _.update('blim ! set("Blim!"))
-  bla(blam && blim)
-
-  val migrator: JsonMigrator[V3] = from[V1].to[V2](blam).to[V3](blim)
-
-  case class Foo(s: String, i: Int)
-
-  // persister[Foo]("foo")
-
-  case class Bar(b: Boolean)
-
-  // persister[Bar, V3]("bar", )
-
-  // persister[Bar, V3]("foo", from[V1].to[V2](renameItems)
-  //                                   .to[V3](setSizeToDefault))  // produces JsonMigrator[V3]
-
-  // trait JsonMigrator[V] {
-  //   def migrate(version: Version)
-  // }
-
-  // migrator = List[(Version, JsValue) => (Version, JsValue)]
-
-  //
-  // persister -> JsonPersister[T, V]
-  // migrate[A <: Version, B <: Version] -> JsonMigrator[A, B]
-  //
-  // JsonPersister[T, V](key) if V is V1 ->
-  // JsonPersister[T, V](key, migrator[V]) if V is V1 ->
-  //
-  // V3 is an HList-like structure Version[V1, V2, V3]
-  //
-  //
-  // Persister(
-  //   toPersisted = {
-  //     case t: T ⇒ Persisted(key, version, encoding.encode(t))
-  //   },
-  //   fromPersisted = {
-  //     case Persisted(k, v, bytes) if k == key && v == version ⇒ encoding.decode(bytes)
-  //     case Persisted(k, v, bytes) if k == key && v == version ⇒ encoding.decode(bytes)
-  //   }
-  // )
-  //
-  // We need:
-  //
-  //  - Version type needs to be ordered somehow or the order needs to be known
-  //  - Version -> List[Int]
-  //
-  //
-
-  // }
-
+  def persister[T: RootJsonFormat: ClassTag, V <: Version: VersionInfo: Migratable](key: String, migrator: JsonMigrator[V]): JsonPersister[T, V] = new VnJsonPersister[T, V](key, migrator)
 }
