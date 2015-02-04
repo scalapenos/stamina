@@ -31,10 +31,12 @@ package stamina {
   case class Persisted(key: String, version: Int, bytes: ByteString)
 
   /**
-   *
+   * A Persister[T, V] provides a type-safe API for persisting instances of T
+   * at version V and unpersisting persisted instances of T for all versions up
+   * to and including version V.
    */
   abstract class Persister[T: ClassTag, V <: Version: VersionInfo](val key: String) {
-    lazy val version = Version.numberFor[V]
+    protected lazy val version = Version.numberFor[V]
 
     def canPersist(a: AnyRef): Boolean = toT(a).isDefined
 
@@ -51,6 +53,9 @@ package stamina {
     private[stamina] def unpersistAny(persisted: Persisted): AnyRef = unpersist(persisted).asInstanceOf[AnyRef]
   }
 
+  /**
+   *
+   */
   case class Persisters(persisters: List[Persister[_, _]]) {
     def canPersist(a: AnyRef): Boolean = persisters.exists(_.canPersist(a))
     def canUnpersist(p: Persisted): Boolean = persisters.exists(_.canUnpersist(p))
