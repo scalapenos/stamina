@@ -1,6 +1,6 @@
 
 package object stamina {
-  /**  */
+  /** Type alias for Akka's ByteSttring so we don't have to import it everywhere. */
   type ByteString = akka.util.ByteString
   val ByteString = akka.util.ByteString
 }

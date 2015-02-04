@@ -1,6 +1,7 @@
 package stamina
 
 import scala.reflect.ClassTag
+import scala.util._
 
 /**
  * A Persister[T, V] provides a type-safe API for persisting instances of T
@@ -29,5 +30,10 @@ abstract class Persister[T: ClassTag, V <: Version: VersionInfo](val key: String
     )
   }
 
-  private[stamina] def unpersistAny(persisted: Persisted): AnyRef = unpersist(persisted).asInstanceOf[AnyRef]
+  private[stamina] def unpersistAny(persisted: Persisted): AnyRef = {
+    Try(unpersist(persisted).asInstanceOf[AnyRef]) match {
+      case Success(anyref) ⇒ anyref
+      case Failure(error)  ⇒ throw UnrecoverableDataException(persisted, error)
+    }
+  }
 }
