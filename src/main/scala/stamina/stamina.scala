@@ -1,5 +1,3 @@
-import scala.reflect._
-import scala.util.control._
 
 package object stamina {
   /**  */
@@ -24,52 +22,7 @@ package stamina {
    */
   trait Persistable extends java.io.Serializable
 
-  /**
-   * A simple container holding a persistence key, a version number, and the raw
-   * serialized bytes.
-   */
-  case class Persisted(key: String, version: Int, bytes: ByteString)
-
-  /**
-   * A Persister[T, V] provides a type-safe API for persisting instances of T
-   * at version V and unpersisting persisted instances of T for all versions up
-   * to and including version V.
-   */
-  abstract class Persister[T: ClassTag, V <: Version: VersionInfo](val key: String) {
-    protected lazy val version = Version.numberFor[V]
-
-    def canPersist(a: AnyRef): Boolean = toT(a).isDefined
-
-    def persist(t: T): Persisted
-    def canUnpersist(p: Persisted): Boolean
-    def unpersist(persisted: Persisted): T
-
-    private[stamina] def toT(any: AnyRef): Option[T] = any match {
-      case t: T ⇒ Some(t)
-      case _    ⇒ None
-    }
-
-    private[stamina] def persistAny(any: AnyRef): Persisted = toT(any).map(persist).getOrElse(throw new IllegalArgumentException(s"Persister"))
-    private[stamina] def unpersistAny(persisted: Persisted): AnyRef = unpersist(persisted).asInstanceOf[AnyRef]
-  }
-
-  /**
-   *
-   */
-  case class Persisters(persisters: List[Persister[_, _]]) {
-    def canPersist(a: AnyRef): Boolean = persisters.exists(_.canPersist(a))
-    def canUnpersist(p: Persisted): Boolean = persisters.exists(_.canUnpersist(p))
-
-    def persist(a: AnyRef): Persisted = persisters.find(_.canPersist(a)).map(_.persistAny(a)).getOrElse(throw new IllegalArgumentException("Persisters no persister found"))
-    def unpersist(persisted: Persisted): AnyRef = persisters.find(_.canUnpersist(persisted)).map(_.unpersistAny(persisted)).getOrElse(throw new IllegalArgumentException("Persisters no unpersister found"))
-
-    def ++(other: Persisters): Persisters = Persisters(persisters ++ other.persisters)
-  }
-
-  object Persisters {
-    def apply[T: ClassTag, V <: Version: VersionInfo](persister: Persister[T, V]): Persisters = apply(List(persister))
-    def apply(first: Persister[_, _], rest: Persister[_, _]*): Persisters = apply(first :: rest.toList)
-  }
+  import scala.util.control._
 
   case class UnregistredTypeException(obj: AnyRef)
     extends RuntimeException(s"No persister registered for class: ${obj.getClass}")
