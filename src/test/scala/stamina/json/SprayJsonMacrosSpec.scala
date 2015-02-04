@@ -1,9 +1,7 @@
 package stamina
 package json
 
-import org.scalatest._
-
-class SprayJsonMacrosSpec extends WordSpecLike with Matchers with OptionValues with TryValues with Inside with Inspectors {
+class SprayJsonMacrosSpec extends StaminaSpec {
   import TestDomain._
   import spray.json._
   import SprayJsonFormats._

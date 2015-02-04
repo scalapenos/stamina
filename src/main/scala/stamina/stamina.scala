@@ -1,9 +1,7 @@
 import scala.reflect._
+import scala.util.control._
 
 package object stamina {
-  type ToPersisted = PartialFunction[AnyRef, Persisted]
-  type FromPersisted = PartialFunction[Persisted, AnyRef]
-
   /**  */
   type ByteString = akka.util.ByteString
   val ByteString = akka.util.ByteString
@@ -28,72 +26,55 @@ package stamina {
 
   /**
    * A simple container holding a persistence key, a version number, and the raw
-   * serialized/encoded bytes.
+   * serialized bytes.
    */
   case class Persisted(key: String, version: Int, bytes: ByteString)
 
-  object Persisted {
-    /** The default version is 1. */
-    def apply(key: String, bytes: ByteString): Persisted = apply(key, 1, bytes)
-  }
-
   /**
    *
    */
-  abstract class Persister2[T: ClassTag, V <: Version: VersionInfo](val key: String) {
+  abstract class Persister[T: ClassTag, V <: Version: VersionInfo](val key: String) {
     lazy val version = Version.numberFor[V]
 
-    def canPersist(a: AnyRef): Boolean = a match {
-      case t: T ⇒ true
-      case _    ⇒ false
-    }
-
-    def canUnpersist(p: Persisted): Boolean
+    def canPersist(a: AnyRef): Boolean = toT(a).isDefined
 
     def persist(t: T): Persisted
+    def canUnpersist(p: Persisted): Boolean
     def unpersist(persisted: Persisted): T
+
+    private[stamina] def toT(any: AnyRef): Option[T] = any match {
+      case t: T ⇒ Some(t)
+      case _    ⇒ None
+    }
+
+    private[stamina] def persistAny(any: AnyRef): Persisted = toT(any).map(persist).getOrElse(throw new IllegalArgumentException(s"Persister"))
+    private[stamina] def unpersistAny(persisted: Persisted): AnyRef = unpersist(persisted).asInstanceOf[AnyRef]
   }
 
-  case class Persisters(persisters: List[Persister2[_, _]]) {
+  case class Persisters(persisters: List[Persister[_, _]]) {
     def canPersist(a: AnyRef): Boolean = persisters.exists(_.canPersist(a))
     def canUnpersist(p: Persisted): Boolean = persisters.exists(_.canUnpersist(p))
 
-    // def persist(a: AnyRef): Persisted = persisters.find(_.canPersist(a)).map(_.persist(a)).getOrElse(throw new IllegalArgumentException("Persisters.persist"))
-    // def unpersist(persisted: Persisted): T
+    def persist(a: AnyRef): Persisted = persisters.find(_.canPersist(a)).map(_.persistAny(a)).getOrElse(throw new IllegalArgumentException("Persisters no persister found"))
+    def unpersist(persisted: Persisted): AnyRef = persisters.find(_.canUnpersist(persisted)).map(_.unpersistAny(persisted)).getOrElse(throw new IllegalArgumentException("Persisters no unpersister found"))
+
+    def ++(other: Persisters): Persisters = Persisters(persisters ++ other.persisters)
   }
 
   object Persisters {
-    def apply[T: ClassTag, V <: Version: VersionInfo](persister: Persister2[T, V]): Persisters = apply(List(persister))
-    def apply(first: Persister2[_, _], rest: Persister2[_, _]*): Persisters = apply(first :: rest.toList)
-  }
-
-  /**
-   *
-   */
-  @deprecated(message = "Don't use it!", since = "recently")
-  case class Persister(toPersisted: ToPersisted, fromPersisted: FromPersisted) {
-    def ||(other: Persister) = orElse(other)
-    def orElse(other: Persister): Persister = Persister(
-      this.toPersisted orElse other.toPersisted,
-      this.fromPersisted orElse other.fromPersisted
-    )
-
-    def canPersist(obj: AnyRef): Boolean = toPersisted.isDefinedAt(obj)
-    def canRecover(persisted: Persisted): Boolean = fromPersisted.isDefinedAt(persisted)
-  }
-
-  object Persister {
-    def apply(first: Persister, rest: Persister*): Persister = {
-      rest.foldLeft(first)((persisters, persister) ⇒ persisters orElse persister)
-    }
+    def apply[T: ClassTag, V <: Version: VersionInfo](persister: Persister[T, V]): Persisters = apply(List(persister))
+    def apply(first: Persister[_, _], rest: Persister[_, _]*): Persisters = apply(first :: rest.toList)
   }
 
   case class UnregistredTypeException(obj: AnyRef)
     extends RuntimeException(s"No persister registered for class: ${obj.getClass}")
+    with NoStackTrace
 
   case class UnregisteredKeyException(key: String)
     extends RuntimeException(s"No persister registered for key: ${key}")
+    with NoStackTrace
 
   case class UnrecoverableDataException(persisted: Persisted, error: Throwable)
     extends RuntimeException(s"Error while trying to read persisted data with key '${persisted.key}' and version ${persisted.version}. Cause: ${error}")
+    with NoStackTrace
 }

@@ -1,9 +1,5 @@
 package stamina
 
-import json.SprayJsonFormats._
-import json.SprayJsonPersistence._
-import spray.json.lenses.JsonLenses._
-
 object TestDomain {
   type ItemId = Int
   type CartId = Int
@@ -21,8 +17,6 @@ object TestDomain {
   val cart = Cart(1, List(item1, item2))
   val cartCreated = CartCreated(cart)
 
-  val v1CartCreatedPersister = persister[CartCreated]("cart-created")
-
   // ==========================================================================
   // V2
   // ==========================================================================
@@ -36,10 +30,6 @@ object TestDomain {
   val v2Cart = CartV2(1, List(v2Item1, v2Item2))
   val v2CartCreated = CartCreatedV2(v2Cart)
 
-  val v2CartCreatedPersister = persister[CartCreatedV2, V2]("cart-created",
-    from[V1].to[V2](_.update('cart / 'items / * / 'price ! set[Int](1000)))
-  )
-
   // ==========================================================================
   // V3
   // ==========================================================================
@@ -52,10 +42,4 @@ object TestDomain {
   val v3Item2 = ItemV3(2, "Everlasting Gobstopper", 489)
   val v3Cart = CartV3(1, List(v3Item1, v3Item2))
   val v3CartCreated = CartCreatedV3(v3Cart, System.currentTimeMillis)
-
-  val v3CartCreatedPersister = persister[CartCreatedV3, V3]("cart-created",
-    from[V1]
-      .to[V2](_.update('cart / 'items / * / 'price ! set[Int](1000)))
-      .to[V3](_.update('timestamp ! set[Long](System.currentTimeMillis - 3600000L)))
-  )
 }

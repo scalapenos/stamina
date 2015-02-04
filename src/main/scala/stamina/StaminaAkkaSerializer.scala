@@ -5,80 +5,69 @@ import scala.util._
 
 import akka.serialization._
 
-/** We need one for serializing. */
-trait HardcodedByteOrder {
-  implicit val byteOrder = java.nio.ByteOrder.LITTLE_ENDIAN
-}
-
 /**
  * A custom Akka Serializer specifically designed for use with Akka Persistence.
  *
  *
  */
-final class StaminaAkkaSerializer(persisters: Persister) extends Serializer with HardcodedByteOrder {
-  import StaminaAkkaSerializer._
-
-  def this(first: Persister, rest: Persister*) =
-    this(rest.foldLeft(first)((persisters, persister) ⇒ persisters orElse persister))
-
-  /** We ddon't need class manifests since we're using more flexible keys. */
+abstract class StaminaAkkaSerializer(persisters: Persisters, encoding: PersistedEncoding = DefaultPersistedEncoding) extends Serializer {
+  /** We don't need class manifests since we're using keys to identify types. */
   val includeManifest: Boolean = false
 
-  /** Uniquely identifies this Serializer */
-  val identifier = 983543153
+  /** Uniquely identifies this Serializer by combining the encoding with a unique number. */
+  val identifier = 9835 * encoding.identifier
 
   /**
-   * Writes the following structure:
    *
-   *   - length of key (4 bytes),
-   *   - key bytes (n bytes),
-   *   - version (4 bytes)
-   *   - persisted data (n bytes)
    *
    * @throws UnregistredTypeException when the specified object is not supported by the persisters.
    */
   def toBinary(obj: AnyRef): Array[Byte] = {
     if (!persisters.canPersist(obj)) throw UnregistredTypeException(obj)
 
-    StaminaAkkaSerializer.toBinary(persisters.toPersisted(obj))
+    encoding.writePersisted(persisters.persist(obj))
   }
 
   /**
-   * Reads the following structure:
    *
-   *   - length of key (4 bytes),
-   *   - key bytes (n bytes),
-   *   - version (4 bytes)
-   *   - persisted data (n bytes)
    *
    * @throws UnregisteredKeyException when the persisted key is not recognized.
    * @throws UnrecoverableDataException when the key is supported but recovery throws an exception.
    */
-  def fromBinary(byteArray: Array[Byte], clazz: Option[Class[_]]): AnyRef = {
-    val bytes = ByteString(byteArray)
-    val keyLength = bytes.take(4).iterator.getInt
-    val (keyBytes, rest) = bytes.drop(4).splitAt(keyLength)
-    val (versionBytes, data) = rest.splitAt(4)
-    val key = keyBytes.utf8String
-    val version = versionBytes.iterator.getInt
-    val persisted = Persisted(key, version, data)
+  def fromBinary(bytes: Array[Byte], clazz: Option[Class[_]]): AnyRef = {
+    val persisted = encoding.readPersisted(bytes)
 
-    if (!persisters.canRecover(persisted)) throw UnregisteredKeyException(key)
+    if (!persisters.canUnpersist(persisted)) throw UnregisteredKeyException(persisted.key)
 
-    Try(persisters.fromPersisted(persisted)) match {
+    Try(persisters.unpersist(persisted)) match {
       case Success(deserialized) ⇒ deserialized
       case Failure(error)        ⇒ throw new UnrecoverableDataException(persisted, error)
     }
   }
 }
 
-object StaminaAkkaSerializer extends HardcodedByteOrder {
-  def apply(persisters: Persister): StaminaAkkaSerializer = new StaminaAkkaSerializer(persisters)
-  def apply(first: Persister, rest: Persister*): StaminaAkkaSerializer = new StaminaAkkaSerializer(first, rest: _*)
+trait PersistedEncoding {
+  def identifier: Int
+  def writePersisted(persisted: Persisted): Array[Byte]
+  def readPersisted(bytes: Array[Byte]): Persisted
+}
 
+/**
+ * Uses the following structure:
+ *
+ *   - length of key (4 bytes),
+ *   - key bytes (n bytes),
+ *   - version (4 bytes)
+ *   - persisted data (n bytes)
+ *
+ */
+object DefaultPersistedEncoding extends PersistedEncoding {
+  implicit val byteOrder = java.nio.ByteOrder.LITTLE_ENDIAN
   import java.nio.charset.StandardCharsets._
 
-  private[stamina] def toBinary(persisted: Persisted): Array[Byte] = {
+  def identifier = 490303
+
+  def writePersisted(persisted: Persisted): Array[Byte] = {
     val keyBytes = persisted.key.getBytes(UTF_8)
 
     ByteString.
@@ -89,5 +78,16 @@ object StaminaAkkaSerializer extends HardcodedByteOrder {
       append(persisted.bytes).
       result.
       toArray
+  }
+
+  def readPersisted(byteArray: Array[Byte]): Persisted = {
+    val bytes = ByteString(byteArray)
+    val keyLength = bytes.take(4).iterator.getInt
+    val (keyBytes, rest) = bytes.drop(4).splitAt(keyLength)
+    val (versionBytes, data) = rest.splitAt(4)
+    val key = keyBytes.utf8String
+    val version = versionBytes.iterator.getInt
+
+    Persisted(key, version, data)
   }
 }

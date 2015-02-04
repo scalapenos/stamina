@@ -1,11 +1,22 @@
 package stamina
 package json
 
-import org.scalatest._
-
-class SprayJsonPersistenceSpec extends WordSpecLike with Matchers with OptionValues with TryValues with Inside with Inspectors {
+class SprayJsonPersistenceSpec extends StaminaSpec {
   import TestDomain._
-  import SprayJsonPersistence._
+  import SprayJsonFormats._
+  import spray.json.lenses.JsonLenses._
+
+  val v1CartCreatedPersister = persister[CartCreated]("cart-created")
+
+  val v2CartCreatedPersister = persister[CartCreatedV2, V2]("cart-created",
+    from[V1].to[V2](_.update('cart / 'items / * / 'price ! set[Int](1000)))
+  )
+
+  val v3CartCreatedPersister = persister[CartCreatedV3, V3]("cart-created",
+    from[V1]
+      .to[V2](_.update('cart / 'items / * / 'price ! set[Int](1000)))
+      .to[V3](_.update('timestamp ! set[Long](System.currentTimeMillis - 3600000L)))
+  )
 
   "V1 persisters produced by SprayJsonPersister" should {
     "correctly persist and unpersist domain events " in {
