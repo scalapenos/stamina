@@ -1,7 +1,8 @@
 package stamina
 
 /**
- *
+ * The encoding used to translate an instance of <code>Persisted</code>
+ * to a byte array and back.
  */
 trait PersistedEncoding {
   def identifier: Int
