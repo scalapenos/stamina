@@ -8,14 +8,14 @@ object TestDomain {
   // V1
   // ==========================================================================
 
-  case class Item(id: ItemId, name: String)
-  case class Cart(id: CartId, items: List[Item])
-  case class CartCreated(cart: Cart)
+  case class ItemV1(id: ItemId, name: String)
+  case class CartV1(id: CartId, items: List[ItemV1])
+  case class CartCreatedV1(cart: CartV1)
 
-  val item1 = Item(1, "Wonka Bar")
-  val item2 = Item(2, "Everlasting Gobstopper")
-  val cart = Cart(1, List(item1, item2))
-  val cartCreated = CartCreated(cart)
+  val v1Item1 = ItemV1(1, "Wonka Bar")
+  val v1Item2 = ItemV1(2, "Everlasting Gobstopper")
+  val v1Cart = CartV1(1, List(v1Item1, v1Item2))
+  val v1CartCreated = CartCreatedV1(v1Cart)
 
   // ==========================================================================
   // V2

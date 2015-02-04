@@ -8,11 +8,13 @@ class SprayJsonMacrosSpec extends StaminaSpec {
 
   "SprayJsonMacros" should {
     "generate RootJsonFormats for case classes" in {
-      // the test is simply that this line should compile
-      implicitly[RootJsonFormat[CartCreated]]
+      // the test is simply that these lines should compile
+      implicitly[RootJsonFormat[ItemV1]]
+      implicitly[RootJsonFormat[CartV1]]
+      implicitly[RootJsonFormat[CartCreatedV1]]
     }
 
-    "generate lazy RootJsonFormats for recursive case classes" in {
+    "generate lazy RootJsonFormats for recursive case classes" ignore {
 
     }
   }
