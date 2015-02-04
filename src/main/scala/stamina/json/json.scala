@@ -7,28 +7,40 @@ import spray.json._
  * Adds some handy sugar around reading/writing json from/to ByteStrings.
  */
 package object json {
-  implicit class AnyWithJsonByteStringConversion[T](val any: T) extends AnyVal {
-    def toJsonBytes(implicit writer: RootJsonWriter[T]): ByteString = ByteString(writer.write(any).compactPrint)
-  }
-
-  implicit class ByteStringWithRootJsonReaderSupport(val bytes: ByteString) extends AnyVal {
-    def parseJson = JsonParser(ParserInput(bytes.toArray))
-    def fromJsonBytes[T](implicit reader: RootJsonReader[T]): T = reader.read(parseJson)
-  }
-
   type JsonMigration = JsValue ⇒ JsValue
   object JsonMigration {
     val Identity: JsonMigration = identity[JsValue]
   }
 
   implicit class JsonMigrationWithComposition(val migration: JsonMigration) extends AnyVal {
-    def &&(migration2: JsonMigration): JsonMigration = (value: JsValue) ⇒ migration2(migration(value))
+    def &&(migration2: JsonMigration): JsonMigration = {
+      if (migration == JsonMigration.Identity) migration2
+      else if (migration2 == JsonMigration.Identity) migration
+      else { (value: JsValue) ⇒
+        if (migration == JsonMigration.Identity) migration2(value)
+        else migration2(migration(value))
+      }
+    }
   }
 
+  /**
+   *
+   */
   def from[V <: V1: VersionInfo] = new JsonMigrator[V](Map(Version.numberFor[V] -> JsonMigration.Identity))
 
+  /**
+   *
+   */
   def persister[T: RootJsonFormat: ClassTag](key: String): JsonPersister[T, V1] = new V1JsonPersister[T, V1](key)
+
+  /**
+   *
+   */
   def persister[T: RootJsonFormat: ClassTag, V <: Version: VersionInfo: Migratable](key: String, migrator: JsonMigrator[V]): JsonPersister[T, V] = new VnJsonPersister[T, V](key, migrator)
+
+  private[json] def toJsonBytes[T](t: T)(implicit writer: RootJsonWriter[T]): ByteString = ByteString(writer.write(t).compactPrint)
+  private[json] def fromJsonBytes[T](bytes: ByteString)(implicit reader: RootJsonReader[T]): T = reader.read(parseJson(bytes))
+  private[json] def parseJson(bytes: ByteString): JsValue = JsonParser(ParserInput(bytes.toArray))
 }
 
 package json {
@@ -41,11 +53,11 @@ package json {
       )
     }
 
-    def to[HigherV <: Version: VersionInfo](migration: JsonMigration)(implicit isHigherThan: IsNextAfter[HigherV, V]): JsonMigrator[HigherV] = {
+    def to[NextV <: Version: VersionInfo](migration: JsonMigration)(implicit isNextAfter: IsNextAfter[NextV, V]): JsonMigrator[NextV] = {
       val updatedOldMigrations: Map[Int, JsonMigration] = migrations.mapValues(_ && migration)
-      val newMigrations = updatedOldMigrations + (Version.numberFor[HigherV] -> JsonMigration.Identity)
+      val newMigrations = updatedOldMigrations + (Version.numberFor[NextV] -> JsonMigration.Identity)
 
-      new JsonMigrator[HigherV](newMigrations)
+      new JsonMigrator[NextV](newMigrations)
     }
   }
 
@@ -54,9 +66,9 @@ package json {
   private[json] class V1JsonPersister[T: RootJsonFormat: ClassTag, V <: V1: VersionInfo](key: String) extends JsonPersister[T, V](key) {
     def canUnpersist(p: Persisted): Boolean = p.key == key && p.version == version
 
-    def persist(t: T): Persisted = Persisted(key, version, t.toJsonBytes)
+    def persist(t: T): Persisted = Persisted(key, version, toJsonBytes(t))
     def unpersist(p: Persisted): T = {
-      if (p.key == key && p.version == version) p.bytes.fromJsonBytes[T]
+      if (p.key == key && p.version == version) fromJsonBytes[T](p.bytes)
       else throw new IllegalArgumentException(s"V1JsonPersister: $p.key was not equal to $key and/or $p.version was not equal to ${version}.")
     }
   }
@@ -64,11 +76,11 @@ package json {
   private[json] class VnJsonPersister[T: RootJsonFormat: ClassTag, V <: Version: VersionInfo: Migratable](key: String, migrator: JsonMigrator[V]) extends JsonPersister[T, V](key) {
     def canUnpersist(p: Persisted): Boolean = p.key == key && migrator.canMigrate(p.version)
 
-    def persist(t: T): Persisted = Persisted(key, version, t.toJsonBytes)
+    def persist(t: T): Persisted = Persisted(key, version, toJsonBytes(t))
     def unpersist(p: Persisted): T = {
       if (p.key != key) throw new IllegalArgumentException(s"VnJsonPersister: ${p.key} was not equal to ${key}.")
       else {
-        migrator.migrate(p.bytes.parseJson, p.version).convertTo[T]
+        migrator.migrate(parseJson(p.bytes), p.version).convertTo[T]
       }
     }
   }
