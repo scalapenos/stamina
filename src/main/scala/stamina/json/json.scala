@@ -123,8 +123,6 @@ package json {
   sealed abstract class JsonPersister[T: RootJsonFormat: ClassTag, V <: Version: VersionInfo](key: String) extends Persister[T, V](key)
 
   private[json] class V1JsonPersister[T: RootJsonFormat: ClassTag](key: String) extends JsonPersister[T, V1](key) {
-    def canUnpersist(p: Persisted): Boolean = p.key == key && p.version == version
-
     def persist(t: T): Persisted = Persisted(key, version, toJsonBytes(t))
     def unpersist(p: Persisted): T = {
       if (p.key == key && p.version == version) fromJsonBytes[T](p.bytes)
@@ -133,7 +131,7 @@ package json {
   }
 
   private[json] class VnJsonPersister[T: RootJsonFormat: ClassTag, V <: Version: VersionInfo: Migratable](key: String, migrator: JsonMigrator[V]) extends JsonPersister[T, V](key) {
-    def canUnpersist(p: Persisted): Boolean = p.key == key && migrator.canMigrate(p.version)
+    override def canUnpersist(p: Persisted): Boolean = p.key == key && migrator.canMigrate(p.version)
 
     def persist(t: T): Persisted = Persisted(key, version, toJsonBytes(t))
     def unpersist(p: Persisted): T = {

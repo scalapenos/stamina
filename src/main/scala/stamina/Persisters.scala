@@ -3,14 +3,29 @@ package stamina
 import scala.reflect.ClassTag
 
 /**
+ * Persisters is the bridge between the type-safe world of <code>Persister[T, V]</code>
+ * and the untyped, AnyRef world of Akka serializers. It wraps one or more
+ * instances of <code>Persister[_, _]</code> and combines them together to form
+ * one single entry-point for subclasses of <code>StaminaAkkaSerializer</code>
  *
  */
 case class Persisters(persisters: List[Persister[_, _]]) {
   def canPersist(a: AnyRef): Boolean = persisters.exists(_.canPersist(a))
   def canUnpersist(p: Persisted): Boolean = persisters.exists(_.canUnpersist(p))
 
-  def persist(a: AnyRef): Persisted = persisters.find(_.canPersist(a)).map(_.persistAny(a)).getOrElse(throw new IllegalArgumentException("Persisters no persister found"))
-  def unpersist(persisted: Persisted): AnyRef = persisters.find(_.canUnpersist(persisted)).map(_.unpersistAny(persisted)).getOrElse(throw new IllegalArgumentException("Persisters no unpersister found"))
+  // format: OFF
+  def persist(anyref: AnyRef): Persisted = {
+    persisters.find(_.canPersist(anyref))
+              .map(_.persistAny(anyref))
+              .getOrElse(throw UnregistredTypeException(anyref))
+  }
+
+  def unpersist(persisted: Persisted): AnyRef = {
+    persisters.find(_.canUnpersist(persisted))
+              .map(_.unpersistAny(persisted))
+              .getOrElse(throw UnsupportedDataException(persisted))
+  }
+  // format: ON
 
   def ++(other: Persisters): Persisters = Persisters(persisters ++ other.persisters)
 }

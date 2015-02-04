@@ -28,11 +28,11 @@ package stamina {
     extends RuntimeException(s"No persister registered for class: ${obj.getClass}")
     with NoStackTrace
 
-  case class UnregisteredKeyException(key: String)
-    extends RuntimeException(s"No persister registered for key: ${key}")
+  case class UnsupportedDataException(persisted: Persisted)
+    extends RuntimeException(s"No unpersister registered for key: '${persisted.key}' and version: ${persisted.version}")
     with NoStackTrace
 
   case class UnrecoverableDataException(persisted: Persisted, error: Throwable)
-    extends RuntimeException(s"Error while trying to read persisted data with key '${persisted.key}' and version ${persisted.version}. Cause: ${error}")
+    extends RuntimeException(s"Error while trying to unpersist data with key '${persisted.key}' and version ${persisted.version}. Cause: ${error}")
     with NoStackTrace
 }

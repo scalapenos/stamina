@@ -35,11 +35,11 @@ abstract class StaminaAkkaSerializer(persisters: Persisters, encoding: Persisted
   def fromBinary(bytes: Array[Byte], clazz: Option[Class[_]]): AnyRef = {
     val persisted = encoding.readPersisted(bytes)
 
-    if (!persisters.canUnpersist(persisted)) throw UnregisteredKeyException(persisted.key)
+    if (!persisters.canUnpersist(persisted)) throw UnsupportedDataException(persisted)
 
     Try(persisters.unpersist(persisted)) match {
       case Success(deserialized) ⇒ deserialized
-      case Failure(error)        ⇒ throw new UnrecoverableDataException(persisted, error)
+      case Failure(error)        ⇒ throw UnrecoverableDataException(persisted, error)
     }
   }
 }
