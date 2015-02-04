@@ -1,7 +1,63 @@
-# Stamina
-Stamina is an Akka Serializer written specifically for use with Akka Persistence. It supports explicit (and implicit) versioning of serialized data, a pluggable type class based model for hooking in serialization libraries, support for migration of older data into your current domain, a testkit, and much more.
+Stamina is an Akka Serializer written specifically for use with Akka
+Persistence.
 
-Stamina aims to be the serialization toolkit that should have come with Akka Persistence but didn't.
+It supports explicit versioning of serialized data, an API to support
+migration of older data into your current domain model withgout having
+to keep those older classes around, an API for hooking in existing
+serialization libraries, a ready to use implementation based on spray-
+json, a testkit with support for regression/migration testing, and
+much more.
+
+## Why?
+Stamina aims to be the serialization toolkit that should have come
+with Akka Persistence but didn't.
+
+### So what's wrong with Akka Persistence?
+Akka Persistence is an awesome library for implementing event stores and event-sourcd persistent actors.
+
+The problem arises from the fact that Akka Persistence reuses the
+standard Akka serialization system without adding any kind of
+support for data versioning or deserialization of older versions of
+persisted data.
+
+The Akka serialization system was originally written to support remote
+actors and clustered actors. It is optimized for raw performance and
+low configuration overhead but it assumes that the code that
+serializes your data is the exact same code that deserializes it
+later. This is not necessarily the case in an event store, where data
+might have been serialized by an older iteration of your code.
+
+An event store without some kind of versioning/migration system is not
+very useful since it forces people to somehow work around the missing
+bits, usually by keeping multiple versions of domain classes in the
+code base and explicitly having to deal with those older versions in
+persistent actors. This leads to lots of duplication and an overly
+complex code base.
+
+Some other problems with the existing Akka serialization system (and many serialization libraries) are:
+
+- coupling between the serialized data and a specific Java/Scala class
+or class name. This creates a barrier to refactoring of the domain
+model, something that is very necessary to keep active code bases
+healthy and clean.
+
+- no high-level API for configuring which classes get serialized how.
+The only available option is linking the fully qualified class name of
+a specific class to the fully qualified classname of a serializer.
+
+Most of these problems arise from the simple fact that versioning and
+migration were never part of the design.
+
+
+### What does Stamina add?
+Stamina aims to fix the problems with existing serialization options
+by providing an alternative implementation of the Akka Serializer
+that:
+
+- supports explicit
+
+
+
 
 
 ## Stamina Goals
