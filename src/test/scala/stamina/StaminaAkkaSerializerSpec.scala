@@ -34,23 +34,4 @@ class StaminaAkkaSerializerSpec extends StaminaSpec {
   //   "throw an UnrecoverableDataException when an exception occurs while deserializing" in {
   //     an[UnrecoverableDataException] should be thrownBy fromBinary(StaminaAkkaSerializer.toBinary(Persisted("crt-new", 1, ByteString("unregistered"))))
   //   }
-
-  //   // This is very slow so only un-ignore when you need to compare serializer implementations
-  //   "be very fast when run in a micro-benchmark" ignore {
-  //     def microBench(iterations: Int): Long = {
-  //       val before = System.currentTimeMillis
-  //       List.fill(iterations)(toBinary(cartCreated)).map(fromBinary(_).asInstanceOf[CartCreated])
-  //       System.currentTimeMillis - before
-  //     }
-
-  //     val timings = List.fill(10)(microBench(1000000))
-
-  //     println(s"====================> Json benchmarks: min = ${timings.min}, max = ${timings.max}")
-  //   }
-
-  //   // This just produces sizing statistics so only un-ignore when you need to compare serializer implementations
-  //   "produce compact byte representations" ignore {
-  //     println(s"====================> Json size: ${toBinary(cartCreated).length} bytes")
-  //   }
-  // }
 }
