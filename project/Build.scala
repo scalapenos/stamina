@@ -8,14 +8,22 @@ object Build extends Build {
   lazy val basicSettings = Seq(
     organization := "com.scalapenos",
     version := "0.1.0",
-    scalaVersion := "2.11.4",
+    scalaVersion := "2.11.5",
+    // crossScalaVersions := Seq("2.11.5", "2.10.4"),
+    // crossVersion := CrossVersion.binary,
     scalacOptions := basicScalacOptions,
     incOptions := incOptions.value.withNameHashing(true)
   )
 
   lazy val libSettings = basicSettings ++ formattingSettings
 
-  lazy val preso = Project("stamina", file("."))
+  lazy val root = Project("stamina", file("."))
+    .settings(basicSettings: _*)
+    .aggregate(
+      core
+    )
+
+  lazy val core = Project("stamina-core", file("stamina-core"))
     .settings(libSettings: _*)
     .settings(libraryDependencies ++=
       compile(
@@ -24,7 +32,7 @@ object Build extends Build {
         jsonLenses
       ) ++
       provided(
-        scalaReflect
+        scalaReflect(scalaVersion.value)
       ) ++
       test(
         scalatest
