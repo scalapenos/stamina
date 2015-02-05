@@ -120,26 +120,25 @@ package json {
   /**
    * Simple abstract marker superclass to unify the two internal implementations.
    */
-  sealed abstract class JsonPersister[T: RootJsonFormat: ClassTag, V <: Version: VersionInfo](key: String) extends Persister[T, V](key)
+  sealed abstract class JsonPersister[T: RootJsonFormat: ClassTag, V <: Version: VersionInfo](key: String) extends Persister[T, V](key) {
+    private[json] def self = s"""JsonPersister[${implicitly[ClassTag[T]].runtimeClass.getSimpleName}, V${currentVersion}](key = "${key}")"""
+  }
 
   private[json] class V1JsonPersister[T: RootJsonFormat: ClassTag](key: String) extends JsonPersister[T, V1](key) {
-    def persist(t: T): Persisted = Persisted(key, version, toJsonBytes(t))
+    def persist(t: T): Persisted = Persisted(key, currentVersion, toJsonBytes(t))
     def unpersist(p: Persisted): T = {
-      if (p.key == key && p.version == version) fromJsonBytes[T](p.bytes)
-      else throw new IllegalArgumentException(s"V1JsonPersister: $p.key was not equal to $key and/or $p.version was not equal to ${version}.")
+      if (canUnpersist(p)) fromJsonBytes[T](p.bytes)
+      else throw new IllegalArgumentException(s"""$self cannot unpersist data with key "${p.key}" and version ${p.version}.""")
     }
   }
 
   private[json] class VnJsonPersister[T: RootJsonFormat: ClassTag, V <: Version: VersionInfo: Migratable](key: String, migrator: JsonMigrator[V]) extends JsonPersister[T, V](key) {
     override def canUnpersist(p: Persisted): Boolean = p.key == key && migrator.canMigrate(p.version)
 
-    def persist(t: T): Persisted = Persisted(key, version, toJsonBytes(t))
+    def persist(t: T): Persisted = Persisted(key, currentVersion, toJsonBytes(t))
     def unpersist(p: Persisted): T = {
-      if (p.key != key) throw new IllegalArgumentException(s"VnJsonPersister: ${p.key} was not equal to ${key}.")
-      else {
-        migrator.migrate(parseJson(p.bytes), p.version).convertTo[T]
-      }
+      if (canUnpersist(p)) migrator.migrate(parseJson(p.bytes), p.version).convertTo[T]
+      else throw new IllegalArgumentException(s"""$self cannot unpersist data with key "${p.key}" and version ${p.version}.""")
     }
   }
-
 }

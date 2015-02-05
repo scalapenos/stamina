@@ -9,13 +9,13 @@ import scala.util._
  * to and including version V.
  */
 abstract class Persister[T: ClassTag, V <: Version: VersionInfo](val key: String) {
-  protected lazy val version = Version.numberFor[V]
+  lazy val currentVersion = Version.numberFor[V]
 
   def persist(t: T): Persisted
   def unpersist(persisted: Persisted): T
 
   def canPersist(a: AnyRef): Boolean = convertToT(a).isDefined
-  def canUnpersist(p: Persisted): Boolean = p.key == key && p.version == version
+  def canUnpersist(p: Persisted): Boolean = p.key == key && p.version == currentVersion
 
   private[stamina] def convertToT(any: AnyRef): Option[T] = any match {
     case t: T ⇒ Some(t)
