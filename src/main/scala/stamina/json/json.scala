@@ -121,14 +121,15 @@ package json {
    * Simple abstract marker superclass to unify the two internal implementations.
    */
   sealed abstract class JsonPersister[T: RootJsonFormat: ClassTag, V <: Version: VersionInfo](key: String) extends Persister[T, V](key) {
-    private[json] def self = s"""JsonPersister[${implicitly[ClassTag[T]].runtimeClass.getSimpleName}, V${currentVersion}](key = "${key}")"""
+    private[json] def cannotUnpersist(p: Persisted) =
+      s"""JsonPersister[${implicitly[ClassTag[T]].runtimeClass.getSimpleName}, V${currentVersion}](key = "${key}") cannot unpersist data with key "${p.key}" and version ${p.version}."""
   }
 
   private[json] class V1JsonPersister[T: RootJsonFormat: ClassTag](key: String) extends JsonPersister[T, V1](key) {
     def persist(t: T): Persisted = Persisted(key, currentVersion, toJsonBytes(t))
     def unpersist(p: Persisted): T = {
       if (canUnpersist(p)) fromJsonBytes[T](p.bytes)
-      else throw new IllegalArgumentException(s"""$self cannot unpersist data with key "${p.key}" and version ${p.version}.""")
+      else throw new IllegalArgumentException(cannotUnpersist(p))
     }
   }
 
@@ -138,7 +139,7 @@ package json {
     def persist(t: T): Persisted = Persisted(key, currentVersion, toJsonBytes(t))
     def unpersist(p: Persisted): T = {
       if (canUnpersist(p)) migrator.migrate(parseJson(p.bytes), p.version).convertTo[T]
-      else throw new IllegalArgumentException(s"""$self cannot unpersist data with key "${p.key}" and version ${p.version}.""")
+      else throw new IllegalArgumentException(cannotUnpersist(p))
     }
   }
 }
