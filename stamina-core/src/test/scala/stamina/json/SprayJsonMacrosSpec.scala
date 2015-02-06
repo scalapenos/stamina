@@ -2,7 +2,7 @@ package stamina
 package json
 
 class SprayJsonMacrosSpec extends StaminaSpec {
-  import TestDomain._
+  import JsonTestDomain._
   import spray.json._
   import SprayJsonFormats._
 

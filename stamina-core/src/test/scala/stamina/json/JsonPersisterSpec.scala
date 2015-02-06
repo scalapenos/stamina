@@ -2,7 +2,7 @@ package stamina
 package json
 
 class JsonPersisterSpec extends StaminaSpec {
-  import TestDomain._
+  import JsonTestDomain._
   import SprayJsonFormats._
   import spray.json.lenses.JsonLenses._
 
