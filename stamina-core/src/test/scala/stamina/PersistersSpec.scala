@@ -6,10 +6,9 @@ class PersistersSpec extends StaminaSpec {
 
   val itemPersister = persister[Item]("item")
   val cartPersister = persister[Cart]("cart")
+  val cartCreatedPersister = persister[CartCreated]("cart-created")
 
   val persisters = Persisters(itemPersister, cartPersister)
-
-  val cartCreatedPersister = persister[CartCreated]("cart-created")
 
   "An non-empty instance of Persisters" should {
     import persisters._
@@ -27,6 +26,8 @@ class PersistersSpec extends StaminaSpec {
       canUnpersist(cartPersister.persist(cart)) should be(true)
 
       canUnpersist(cartCreatedPersister.persist(cartCreated)) should be(false)
+      canUnpersist(Persisted("unknown", 1, ByteString("..."))) should be(false)
+      canUnpersist(Persisted("item", 2, ByteString("..."))) should be(false)
 
       // works because canUnpersist only looks at the key and the version, not at the raw data
       canUnpersist(Persisted("item", 1, ByteString("Not an item at all!"))) should be(true)
@@ -37,10 +38,23 @@ class PersistersSpec extends StaminaSpec {
       unpersist(persist(cart)) should equal(cart)
     }
 
-    "correctly signal errors from persist() and unpersist()" in {
-      an[UnregistredTypeException] should be thrownBy persist("I don't think so...")
-      an[UnsupportedDataException] should be thrownBy unpersist(cartCreatedPersister.persist(cartCreated))
-      an[UnrecoverableDataException] should be thrownBy unpersist(Persisted("item", 1, ByteString("Not an item at all!")))
+    "throw an UnregistredTypeException when persisting an unregistered type" in {
+      a[UnregistredTypeException] should be thrownBy persist("a raw String is not supported")
+    }
+
+    "throw an UnsupportedDataException when unpersisting data with an unknown key" in {
+      an[UnsupportedDataException] should
+        be thrownBy unpersist(Persisted("unknown", 1, ByteString("...")))
+    }
+
+    "throw an UnsupportedDataException when deserializing data with an unsupported version" in {
+      an[UnsupportedDataException] should
+        be thrownBy unpersist(Persisted("item", 2, ByteString("...")))
+    }
+
+    "throw an UnrecoverableDataException when an exception occurs while deserializing" in {
+      an[UnrecoverableDataException] should
+        be thrownBy unpersist(Persisted("item", 1, ByteString("not an item")))
     }
   }
 }

@@ -2,34 +2,44 @@ package stamina
 
 class StaminaAkkaSerializerSpec extends StaminaSpec {
   import TestDomain._
+  import TestOnlyPersister._
+  import DefaultPersistedEncoding._
 
-  // class TestSerializer extends StaminaAkkaSerializer(Persister(
-  //   toPersisted = {
-  //     case event: CartCreated ⇒ Persisted("crt-new", 1, event.toJsonBytes)
-  //   },
-  //   fromPersisted = {
-  //     case Persisted("crt-new", 1, bytes) ⇒ bytes.fromJsonBytes[CartCreated]
-  //   }
-  // ))
+  val itemPersister = persister[Item]("item")
+  val cartPersister = persister[Cart]("cart")
+  val cartCreatedPersister = persister[CartCreated]("cart-created")
 
-  // val serializer = new TestSerializer()
+  val persisters = Persisters(itemPersister, cartPersister, cartCreatedPersister)
 
-  // import serializer._
+  val serializer = new StaminaAkkaSerializer(persisters) {}
 
-  // "The StaminaAkkaSerializer, using the low-level Persister API" should {
-  //   "correctly serialize and deserialize the current version of the domain" in {
-  //     fromBinary(toBinary(cartCreated)) should equal(cartCreated)
-  //   }
+  import serializer._
 
-  //   "throw an UnregistredTypeException when serializing an unregistered type" in {
-  //     a[UnregistredTypeException] should be thrownBy toBinary("a raw String is not supported")
-  //   }
+  "The StaminaAkkaSerializer" should {
+    "correctly serialize and deserialize the current version of the domain" in {
+      fromBinary(toBinary(item1)) should equal(item1)
+      fromBinary(toBinary(item2)) should equal(item2)
+      fromBinary(toBinary(cart)) should equal(cart)
+      fromBinary(toBinary(cartCreated)) should equal(cartCreated)
+    }
 
-  //   "throw an UnregisteredKeyException when deserializing a Persisted with an unregistered key" in {
-  //     an[UnregisteredKeyException] should be thrownBy fromBinary(StaminaAkkaSerializer.toBinary(Persisted("unregistered", 1, ByteString("unregistered"))))
-  //   }
+    "throw an UnregistredTypeException when serializing an unregistered type" in {
+      a[UnregistredTypeException] should be thrownBy toBinary("a raw String is not supported")
+    }
 
-  //   "throw an UnrecoverableDataException when an exception occurs while deserializing" in {
-  //     an[UnrecoverableDataException] should be thrownBy fromBinary(StaminaAkkaSerializer.toBinary(Persisted("crt-new", 1, ByteString("unregistered"))))
-  //   }
+    "throw an UnsupportedDataException when deserializing data with an unknown key" in {
+      an[UnsupportedDataException] should
+        be thrownBy fromBinary(writePersisted(Persisted("unknown", 1, ByteString("..."))))
+    }
+
+    "throw an UnsupportedDataException when deserializing data with an unsupported version" in {
+      an[UnsupportedDataException] should
+        be thrownBy fromBinary(writePersisted(Persisted("item", 2, ByteString("..."))))
+    }
+
+    "throw an UnrecoverableDataException when an exception occurs while deserializing" in {
+      an[UnrecoverableDataException] should
+        be thrownBy fromBinary(writePersisted(Persisted("item", 1, ByteString("not an item"))))
+    }
+  }
 }
