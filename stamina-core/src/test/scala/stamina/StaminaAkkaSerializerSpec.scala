@@ -2,8 +2,6 @@ package stamina
 
 class StaminaAkkaSerializerSpec extends StaminaSpec {
   import TestDomain._
-  import json._
-  import SprayJsonFormats._
 
   // class TestSerializer extends StaminaAkkaSerializer(Persister(
   //   toPersisted = {

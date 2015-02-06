@@ -20,7 +20,8 @@ object Build extends Build {
   lazy val root = Project("stamina", file("."))
     .settings(basicSettings: _*)
     .aggregate(
-      core
+      core,
+      json
     )
 
   lazy val core = Project("stamina-core", file("stamina-core"))
@@ -28,11 +29,20 @@ object Build extends Build {
     .settings(libraryDependencies ++=
       compile(
         akkaActor,
+        scalaReflect(scalaVersion.value)
+      ) ++
+      test(
+        scalatest
+      )
+    )
+
+  lazy val json = Project("stamina-json", file("stamina-json"))
+    .dependsOn(core)
+    .settings(libSettings: _*)
+    .settings(libraryDependencies ++=
+      compile(
         sprayJson,
         jsonLenses
-      ) ++
-      provided(
-        scalaReflect(scalaVersion.value)
       ) ++
       test(
         scalatest
