@@ -3,7 +3,7 @@ package stamina
 class StaminaAkkaSerializerSpec extends StaminaSpec {
   import TestDomain._
   import TestOnlyPersister._
-  import DefaultPersistedEncoding._
+  import DefaultPersistedCodec._
 
   val itemPersister = persister[Item]("item")
   val cartPersister = persister[Cart]("cart")

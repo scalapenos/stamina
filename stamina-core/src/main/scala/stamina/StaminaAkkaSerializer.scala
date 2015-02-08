@@ -6,7 +6,7 @@ import akka.serialization._
 /**
  * A custom Akka Serializer specifically designed for use with Akka Persistence.
  */
-abstract class StaminaAkkaSerializer(persisters: Persisters, encoding: PersistedEncoding = DefaultPersistedEncoding) extends Serializer {
+abstract class StaminaAkkaSerializer(persisters: Persisters, encoding: PersistedCodec = DefaultPersistedCodec) extends Serializer {
   /** We don't need class manifests since we're using keys to identify types. */
   val includeManifest: Boolean = false
 

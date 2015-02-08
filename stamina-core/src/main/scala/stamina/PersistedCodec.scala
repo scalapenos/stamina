@@ -4,7 +4,7 @@ package stamina
  * The encoding used to translate an instance of <code>Persisted</code>
  * to a byte array and back.
  */
-trait PersistedEncoding {
+trait PersistedCodec {
   def identifier: Int
   def writePersisted(persisted: Persisted): Array[Byte]
   def readPersisted(bytes: Array[Byte]): Persisted
@@ -19,7 +19,7 @@ trait PersistedEncoding {
  *   - persisted data (n bytes)
  *
  */
-object DefaultPersistedEncoding extends PersistedEncoding {
+object DefaultPersistedCodec extends PersistedCodec {
   implicit val byteOrder = java.nio.ByteOrder.LITTLE_ENDIAN
   import java.nio.charset.StandardCharsets._
 
