@@ -3,11 +3,11 @@
 Stamina is not ready for prime-time yet but that will hopefully change soon. Do feel free to browse, comment, create issues, pull requests, etc. as long as you realize that nothing has been set into stone yet.
 
 ## Current status
-*stamina-core* and *stamina-json* are looking quite finished already and we're happy wth the API that has evolved out of the many experiments we tried recently. The core API might change slightly when we try to implement a second serialization framework and we might prmote (parts of) of the migration DSL from stamina-json into the core API.
+*stamina-core* and *stamina-json* are looking quite finished already and we're happy wth the API that has evolved out of the many experiments we tried recently. The core API might change slightly when we try to implement a second serialization framework and we might promote (parts of) of the migration DSL from stamina-json into the core API.
 
 Next modules to be built: *stamina-testkit* and *stamina-sample-app*.
 
-Possible alternative implementations being looked at: *stamina-avro*, *stamina-pickling*.
+Possible candidates for supported serialization formats being researched: *stamina-avro*, *stamina-pickling*.
 
 The contents of this README will be frequently updated to reflect the current status.
 
