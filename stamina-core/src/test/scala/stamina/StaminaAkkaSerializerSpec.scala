@@ -23,8 +23,8 @@ class StaminaAkkaSerializerSpec extends StaminaSpec {
       fromBinary(toBinary(cartCreated)) should equal(cartCreated)
     }
 
-    "throw an UnregistredTypeException when serializing an unregistered type" in {
-      a[UnregistredTypeException] should be thrownBy toBinary("a raw String is not supported")
+    "throw an UnregisteredTypeException when serializing an unregistered type" in {
+      a[UnregisteredTypeException] should be thrownBy toBinary("a raw String is not supported")
     }
 
     "throw an UnsupportedDataException when deserializing data with an unknown key" in {

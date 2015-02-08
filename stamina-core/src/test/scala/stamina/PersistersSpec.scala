@@ -38,8 +38,8 @@ class PersistersSpec extends StaminaSpec {
       unpersist(persist(cart)) should equal(cart)
     }
 
-    "throw an UnregistredTypeException when persisting an unregistered type" in {
-      a[UnregistredTypeException] should be thrownBy persist("a raw String is not supported")
+    "throw an UnregisteredTypeException when persisting an unregistered type" in {
+      a[UnregisteredTypeException] should be thrownBy persist("a raw String is not supported")
     }
 
     "throw an UnsupportedDataException when unpersisting data with an unknown key" in {

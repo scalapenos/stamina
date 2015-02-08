@@ -17,7 +17,7 @@ case class Persisters(persisters: List[Persister[_, _]]) {
   def persist(anyref: AnyRef): Persisted = {
     persisters.find(_.canPersist(anyref))
               .map(_.persistAny(anyref))
-              .getOrElse(throw UnregistredTypeException(anyref))
+              .getOrElse(throw UnregisteredTypeException(anyref))
   }
 
   def unpersist(persisted: Persisted): AnyRef = {

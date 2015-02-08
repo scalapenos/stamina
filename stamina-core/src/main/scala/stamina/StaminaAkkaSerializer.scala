@@ -14,10 +14,10 @@ abstract class StaminaAkkaSerializer(persisters: Persisters, encoding: Persisted
   val identifier = 42 * encoding.identifier
 
   /**
-   * @throws UnregistredTypeException when the specified object is not supported by the persisters.
+   * @throws UnregisteredTypeException when the specified object is not supported by the persisters.
    */
   def toBinary(obj: AnyRef): Array[Byte] = {
-    if (!persisters.canPersist(obj)) throw UnregistredTypeException(obj)
+    if (!persisters.canPersist(obj)) throw UnregisteredTypeException(obj)
 
     encoding.writePersisted(persisters.persist(obj))
   }
