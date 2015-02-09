@@ -93,9 +93,11 @@ Some other problems with the existing Akka serialization system
 (and many other serialization libraries) are:
 
 - coupling between the serialized data and a specific Java/Scala class
-or class name, usually a fully qualified class one. This creates a
+or class name, usually even a fully qualified one. This creates a
 barrier to refactoring of the domain model, something that is very
-necessary to keep active code bases healthy and clean.
+necessary to keep active code bases healthy and clean. Renaming and
+repackaging of such classes is no longer possible without losing
+backwards compatibility with your already persisted versions.
 
 - no high-level API for configuring which classes get serialized how.
 The only available option is linking the fully qualified class name of
@@ -105,7 +107,7 @@ versioning or migrations, and leads to having to write lots of explicit,
 low-level serialization code.
 
 Most of these problems arise from the simple fact that versioning and
-migration were never part of the design.
+migration were never part of the design of such serialization systems.
 
 
 ## Goals / Approach
@@ -113,7 +115,7 @@ migration were never part of the design.
 1. Stamina should support pluggable serialization implementations so people can reuse their existing formats and libraries.
 2. Stamina should support code-level configuration options like type classes and macros so it can use all the power provided by the existing libraries.
 3. Stamina should provide explicit support for versioning serialized data (i.e. data is always written together with a version number).
-4. Stamina should provide support for decoupling from the fully qualified class name of serialized classes (i.e. data is always written together with an explicit symbolic key),
-5. Stamina should provide explicit and easy to use support for deserializing older versions of stored classes (i.e. migrations).
+4. Stamina should provide support for decoupling from the fully qualified class name of serialized classes (i.e. data is always written together with a symbolic key),
+5. Stamina should provide an easy to use API for deserializing older versions of stored classes (i.e. migrations).
 6. Stamina should be highly customizable from code while requiring the least possible amount of boilerplate
 7. Stamina should use the Scala type system to prevent common serialization, versioning, and migration problems.
