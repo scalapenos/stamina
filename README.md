@@ -25,8 +25,10 @@ Persistence. Its main defining characteristics are:
 The first (and currently only) implementation is based on spray-json. It supports migration from oldder versions using a very simple little DSL to pre-process the JSON AST based on the specific version being read before deserialization takes place. Here's an example:
 
 ```scala
-// This example uses explicitly versioned case classes to more
-// easily show how to deal with explicit versions and migrations.
+// This example uses explicitly versioned case classes (i.e. the same
+// domain class in three different versions with three different names)
+// to more easily show how to deal with versions and migrations.
+//
 // Normally, of course, you would only need one case class,
 // which would always represent the current version (V3 in this case).
 import stamina.json._
@@ -41,15 +43,15 @@ val v1CartCreatedPersister = persister[CartCreatedV1]("cart-created")
 // spray-json persister for V2 but with support for migration
 // of data writen in the V1 format.
 val v2CartCreatedPersister = persister[CartCreatedV2, V2]("cart-created",
-from[V1].to[V2](_.update('cart / 'items / * / 'price ! set[Int](1000)))
+  from[V1].to[V2](_.update('cart / 'items / * / 'price ! set[Int](1000)))
 )
 
 // spray-json persister for V3 but with support for migration
 // of data writen in the V1 and V2 formats.
 val v3CartCreatedPersister = persister[CartCreatedV3, V3]("cart-created",
-from[V1]
-  .to[V2](_.update('cart / 'items / * / 'price ! set[Int](1000)))
-  .to[V3](_.update('timestamp ! set[Long](System.currentTimeMillis - 3600000L)))
+  from[V1]
+    .to[V2](_.update('cart / 'items / * / 'price ! set[Int](1000)))
+    .to[V3](_.update('timestamp ! set[Long](System.currentTimeMillis)))
 )
 ```
 
