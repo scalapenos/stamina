@@ -22,7 +22,7 @@ Persistence. Its main defining characteristics are:
 - decoupling from fully qualified class names (or randomly generated ids) as serialization keys. Instead, Stamina uses simple String keys to identify serialized types.
 - support for multiple serialization libraries as implementation plugins, as long as they can be ported/adjusted/wrapped in order to support the above features.
 
-The first (and currently only) implementation is based on spray-json. It supports migration from oldder versions using a very simple little DSL to pre-process the JSON AST based on the specific version being read before deserialization takes place. Here's an example:
+The first (and currently only) implementation is based on spray-json. It supports migration from older versions using a very simple little DSL to pre-process the JSON AST based on the specific version being read before deserialization takes place. Here's an example:
 
 ```scala
 // This example uses explicitly versioned case classes (i.e. the same
@@ -67,7 +67,7 @@ with Akka Persistence but didn't.
 
 ### So what's wrong with Akka Persistence?
 Akka Persistence is an awesome library for implementing event
-stores and event-sourcd persistent actors.
+stores and event-soured persistent actors.
 
 The problem arises from the fact that Akka Persistence reuses the
 standard Akka serialization system without adding any kind of
