@@ -1,10 +1,13 @@
 
 # Misc TODOs
 
-extract Migration, Migrator, and the migration DSL as abstract stuff for reuse in the avro implementation
+### Migration
+- extract Migration, Migrator, and the migration DSL as abstract stuff for reuse in the avro implementation
+- demonstrate that certain migrations will not compile using the shapeless `illTyped`` util macro
 
-Demonstrate that you can combine two different Persister implementations
-in one instance of Persisters
+### Persisters
+- Better, more performant hot-path behavior for `Persisters`.
+- Demonstrate that you can combine two different Persister implementations (i.e. json and avro) in one instance of `Persisters`
 
 ## Migrating between different implementations?
 Allow for switching implementations halfway? Something like this:
