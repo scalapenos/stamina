@@ -3,7 +3,7 @@ package json
 
 class JsonPersisterSpec extends StaminaJsonSpec {
   import JsonTestDomain._
-  import SprayJsonFormats._
+  import SprayJsonMacros._
   import spray.json.lenses.JsonLenses._
 
   val v1CartCreatedPersister = persister[CartCreatedV1]("cart-created")

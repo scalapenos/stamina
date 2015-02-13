@@ -3,17 +3,14 @@ package stamina.json
 import spray.json._
 import scala.reflect.macros.blackbox.Context
 
-trait SprayJsonFormats extends DefaultJsonProtocol with LowPrioritySprayJsonFormats
-object SprayJsonFormats extends SprayJsonFormats
+trait SprayJsonMacros extends DefaultJsonProtocol with LowPrioritySprayJsonMacros
+object SprayJsonMacros extends SprayJsonMacros
 
-trait LowPrioritySprayJsonFormats {
-  // TODO: better way to recognize case classes in the type
-  //       signature in order to prevent compiler errors when
-  //       encountering non-case classes.
-  implicit def caseClassRootJsonFormat[T <: Product]: RootJsonFormat[T] = macro SprayJsonMacros.materializeRootJsonFormat[T]
+sealed trait LowPrioritySprayJsonMacros {
+  implicit def materializeRootJsonFormat[T <: Product]: RootJsonFormat[T] = macro SprayJsonMacroImpls.materializeRootJsonFormat[T]
 }
 
-object SprayJsonMacros {
+object SprayJsonMacroImpls {
   def materializeRootJsonFormat[T: c.WeakTypeTag](c: Context): c.Expr[RootJsonFormat[T]] = {
     import c.universe._
 
@@ -27,11 +24,12 @@ object SprayJsonMacros {
     }
 
     // TODO: generate lazy formats for trees
+    //       --> how to detect the need for laziness? Or just always generate lazy versions?
 
     c.Expr[RootJsonFormat[T]](q"jsonFormat(${tpe.typeSymbol.companion}, ..$methodNames)")
   }
 
-  def lazyRootFormat[T](format: ⇒ RootJsonFormat[T]) = new RootJsonFormat[T] {
+  private def lazyRootFormat[T](format: ⇒ RootJsonFormat[T]) = new RootJsonFormat[T] {
     lazy val delegate = format;
     def write(x: T) = delegate.write(x);
     def read(value: JsValue) = delegate.read(value);

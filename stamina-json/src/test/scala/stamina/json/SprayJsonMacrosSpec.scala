@@ -4,7 +4,7 @@ package json
 class SprayJsonMacrosSpec extends StaminaJsonSpec {
   import JsonTestDomain._
   import spray.json._
-  import SprayJsonFormats._
+  import SprayJsonMacros._
 
   "SprayJsonMacros" should {
     "generate RootJsonFormats for case classes" in {
