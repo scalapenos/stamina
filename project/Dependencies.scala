@@ -10,6 +10,16 @@ object Dependencies {
   // Dependency on the version of scala-reflect linked to the cross-build scala version
   def scalaReflect(versionOfScala: String) = "org.scala-lang" % "scala-reflect" % versionOfScala
 
+  def quasiQuotes(versionOfScala: String) = {
+    CrossVersion.partialVersion(versionOfScala) match {
+      case Some((2, scalaMajor)) if scalaMajor >= 11 => Seq.empty
+      case Some((2, 10)) => Seq(
+        compilerPlugin("org.scalamacros" % "paradise" % "2.0.1" cross CrossVersion.full),
+        "org.scalamacros" %% "quasiquotes" % "2.0.1" cross CrossVersion.binary
+      )
+    }
+  }
+
   // Dependency scoping functions
   def compile   (deps: ModuleID*): Seq[ModuleID] = deps map (_ % "compile")
   def test      (deps: ModuleID*): Seq[ModuleID] = deps map (_ % "test")

@@ -1,7 +1,7 @@
 package stamina.json
 
 import spray.json._
-import scala.reflect.macros.blackbox.Context
+import scala.reflect.macros.Context
 
 trait SprayJsonMacros extends DefaultJsonProtocol with LowPrioritySprayJsonMacros
 object SprayJsonMacros extends SprayJsonMacros
