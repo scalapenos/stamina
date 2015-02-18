@@ -49,6 +49,15 @@ object Build extends Build {
       )
     )
 
+  lazy val testkit = Project("stamina-testkit", file("stamina-testkit"))
+    .dependsOn(core)
+    .settings(libSettings: _*)
+    .settings(libraryDependencies ++=
+      test(
+        scalatest
+      )
+    )
+
   val basicScalacOptions = Seq(
     "-encoding", "utf8",
     "-target:jvm-1.7",
