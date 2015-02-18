@@ -9,8 +9,8 @@ object Build extends Build {
     organization := "com.scalapenos",
     version := "0.1.0",
     scalaVersion := "2.11.5",
-    // crossScalaVersions := Seq("2.11.5", "2.10.4"),
-    // crossVersion := CrossVersion.binary,
+    crossScalaVersions := Seq("2.11.5", "2.10.4"),
+    crossVersion := CrossVersion.binary,
     scalacOptions := basicScalacOptions,
     incOptions := incOptions.value.withNameHashing(true)
   )
@@ -31,6 +31,7 @@ object Build extends Build {
         akkaActor,
         scalaReflect(scalaVersion.value)
       ) ++
+      quasiQuotes(scalaVersion.value) ++
       test(
         scalatest
       )
@@ -44,6 +45,7 @@ object Build extends Build {
         sprayJson,
         jsonLenses
       ) ++
+      quasiQuotes(scalaVersion.value) ++
       test(
         scalatest
       )
