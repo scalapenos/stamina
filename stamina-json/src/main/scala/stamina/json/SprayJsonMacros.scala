@@ -15,7 +15,7 @@ object SprayJsonMacroImpls {
     import c.universe._
 
     val tpe = weakTypeOf[T]
-    val methodNames = tpe.decls.toList collect {
+    val methodNames = tpe.declarations.toList collect {
       case method: MethodSymbol if method.isCaseAccessor ⇒ q"${method.name.toString}"
     }
 
@@ -26,7 +26,7 @@ object SprayJsonMacroImpls {
     // TODO: generate lazy formats for trees
     //       --> how to detect the need for laziness? Or just always generate lazy versions?
 
-    c.Expr[RootJsonFormat[T]](q"jsonFormat(${tpe.typeSymbol.companion}, ..$methodNames)")
+    c.Expr[RootJsonFormat[T]](q"jsonFormat(${tpe.typeSymbol.companionSymbol}, ..$methodNames)")
   }
 
   private def lazyRootFormat[T](format: ⇒ RootJsonFormat[T]) = new RootJsonFormat[T] {
