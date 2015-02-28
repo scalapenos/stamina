@@ -16,14 +16,14 @@ import migrations._
  * by far the best way to implement these migration functions is to
  * use the json-lenses library that comes with spray-json.
  *
- * Example:
- * <pre>
+ * @example
+ * {{{
  * val p = persister[CartCreated, V3]("cart-created",
  *   from[V1]
  *     .to[V2](_.update('cart / 'items / * / 'price ! set[Int](1000)))
  *     .to[V3](_.update('timestamp ! set[Long](System.currentTimeMillis - 3600000L)))
  * )
- * </pre>
+ * }}}
  *
  */
 package object json {

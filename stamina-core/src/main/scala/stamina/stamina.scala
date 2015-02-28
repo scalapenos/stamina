@@ -5,6 +5,9 @@ package object stamina {
   val ByteString = akka.util.ByteString
 }
 
+/**
+ *
+ */
 package stamina {
   /**
    * Marker trait for classes that should be persisted using the StaminaAkkaSerializer.
@@ -12,11 +15,12 @@ package stamina {
    * This marker trait can be used to mark all your top-level persistable classes
    * (i.e. events, snapshots, etc.) so that you will only need a few lines of
    * configuration in your application.conf, namely:
-   *
+   * {{{
    * akka.actor.serializers.stamina = <FQCN of your subclass of StaminaAkkaSerializer>
    * akka.actor.serialization-bindings {
    *   "stamina.Persistable" = stamina
    * }
+   * }}}
    */
   trait Persistable extends java.io.Serializable
 
