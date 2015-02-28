@@ -22,11 +22,11 @@ package object migrations {
   }
 
   /**
-   * Creates a Migrator[A, V1] that can function as a builder for
-   * creating Migrator[A, V2], etc. Its migration will be the identity
+   * Creates a Migrator[T, V1] that can function as a builder for
+   * creating Migrator[T, V2], etc. Its migration will be the identity
    * function so calling its migrate function will not have any effect.
    */
-  def from[A, V <: V1: VersionInfo]: Migrator[A, V] = new Migrator[A, V](Map(Version.numberFor[V] -> identityMigration[A]))
+  def from[T, V <: V1: VersionInfo]: Migrator[T, V] = new Migrator[T, V](Map(Version.numberFor[V] -> identityMigration[T]))
 }
 
 package migrations {
@@ -35,15 +35,14 @@ package migrations {
     extends RuntimeException(s"No migration defined from version ${fromVersion} to version ${toVersion}.")
 
   /**
-   * A `Migrator[A, V]` can migrate values from older
-   * versions to version `V` by applying a specific,
-   * usually composed `Migration[A]` to it.
+   * A `Migrator[R, V]` can migrate raw values of type R from older
+   * versions to version `V` by applying a specific `Migration[R]` to it.
    *
-   * You can create instances of `Migrator[A, V]` by using
+   * You can create instances of `Migrator[R, V]` by using
    * a small type-safe DSL consisting of two parts: the
-   * `from[A, V1]` function will create a
-   * `Migrator[A, V1]` and then you can use the
-   * `to[V](migration: Migration[A])` function to build
+   * `from[R, V1]` function will create a
+   * `Migrator[R, V1]` and then you can use the
+   * `to[V](migration: Migration[R])` function to build
    * instances that can migrate multiple versions.
    *
    * @example Using the json implementation:
@@ -55,21 +54,21 @@ package migrations {
    * )
    * }}}
    *
-   *  @tparam A The type of raw data being migrated. In the JSON implementation this would be `JsValue`.
+   *  @tparam R The type of raw data being migrated. In the JSON implementation this would be `JsValue`.
    *  @tparam V The "current" version of this Migrator, i.e. it can migrate values from V1 to this version or any version in between.
    */
-  class Migrator[A, V <: Version: VersionInfo] private[stamina] (migrations: Map[Int, Migration[A]] = Map.empty) {
+  class Migrator[R, V <: Version: VersionInfo] private[stamina] (migrations: Map[Int, Migration[R]] = Map.empty) {
     def canMigrate(fromVersion: Int): Boolean = migrations.contains(fromVersion)
 
-    def migrate(value: A, fromVersion: Int): A = {
+    def migrate(value: R, fromVersion: Int): R = {
       migrations.get(fromVersion).map(_.apply(value)).getOrElse(
         throw UndefinedMigrationException(fromVersion, Version.numberFor[V])
       )
     }
 
-    def to[NextV <: Version: VersionInfo](migration: Migration[A])(implicit isNextAfter: IsNextAfter[NextV, V]) = {
-      new Migrator[A, NextV](
-        migrations.mapValues(_ && migration) + (Version.numberFor[NextV] -> identityMigration[A])
+    def to[NextV <: Version: VersionInfo](migration: Migration[R])(implicit isNextAfter: IsNextVersionAfter[NextV, V]) = {
+      new Migrator[R, NextV](
+        migrations.mapValues(_ && migration) + (Version.numberFor[NextV] -> identityMigration[R])
       )
     }
   }
