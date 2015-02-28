@@ -2,7 +2,6 @@
 # Misc TODOs
 
 ### Migration
-- extract Migration, Migrator, and the migration DSL as abstract stuff for reuse in the avro implementation
 - demonstrate that certain migrations will not compile using the shapeless `illTyped`` util macro
 - Describe the limitations of migration: i.e. hard to migrate one class into two, etc.
 
