@@ -3,6 +3,8 @@ package stamina
 import scala.reflect.ClassTag
 import spray.json._
 
+import migrations._
+
 /**
  * An implementation of the stamina Persister that will use spray-json
  * to read/write serialized values. It supports a DSL for specifying
@@ -25,36 +27,18 @@ import spray.json._
  *
  */
 package object json {
-  /**
-   * A JsonMigration is a simple type alias for a function that takes a JsValue
-   * and produces another JsValue, probably transformed in some way.
-   */
-  type JsonMigration = JsValue ⇒ JsValue
+  /** Simple type alias for Migration[JsValue] */
+  type JsonMigration = Migration[JsValue]
 
-  object JsonMigration {
-    /** The Identity JsonMigration will always return its input as its output. */
-    val Identity: JsonMigration = identity[JsValue]
-  }
-
-  /**
-   * Adds support for combining two JsonMigrations into a new JsonMigration
-   * that will apply the first one and then the second one.
-   */
-  implicit class JsonMigrationWithComposition(val firstMigration: JsonMigration) extends AnyVal {
-    import JsonMigration._
-    def &&(secondMigration: JsonMigration): JsonMigration = {
-      if (firstMigration == Identity) secondMigration
-      else if (secondMigration == Identity) firstMigration
-      else (value: JsValue) ⇒ secondMigration(firstMigration(value))
-    }
-  }
+  /** Simple type alias for Migrator[JsValue, V] */
+  type JsonMigrator[V <: Version] = Migrator[JsValue, V]
 
   /**
    * Creates a JsonMigrator[V1] that can function as a builder for
    * creating JsonMigrator[V2], etc. Its migration will be the identity
    * function so calling its migrate function will not have any effect.
    */
-  def from[V <: V1: VersionInfo]: JsonMigrator[V] = new JsonMigrator[V](Map(Version.numberFor[V] -> JsonMigration.Identity))
+  def from[V <: V1: VersionInfo]: Migrator[JsValue, V] = migrations.from[JsValue, V]
 
   /**
    * Creates a JsonPersister[T, V1], i.e. a JsonPersister that will only persist
@@ -77,48 +61,8 @@ package object json {
 }
 
 package json {
-  case class MissingJsonMigrationException(fromVersion: Int, toVersion: Int)
-    extends RuntimeException(s"No migration defined from version ${fromVersion} to version ${toVersion}.")
-
   /**
-   * A <code>JsonMigrator[V]</code> can migrate values from older
-   * versions to version <code>V</code> by applying a specific
-   * <code>JsonMigrstion</code> to it.
-   *
-   * You can create instances of <code>JsonMigrator</code> by using
-   * a small type-safe DSL consisting of two parts: the
-   * <code>from[V1]</code> function will create a
-   * <code>JsonMigrator[V1]</code> and then you can use the
-   * <code>to[V](migration: JsonMigration)</code> function to build
-   * instances that can migrate multiple versions.
-   *
-   * Example:
-   * <pre>
-   * val p = persister[CartCreated, V3]("cart-created",
-   *   from[V1]
-   *     .to[V2](_.update('cart / 'items / * / 'price ! set[Int](1000)))
-   *     .to[V3](_.update('timestamp ! set[Long](System.currentTimeMillis - 3600000L)))
-   * )
-   * </pre>
-   */
-  final class JsonMigrator[V <: Version: VersionInfo] private[json] (migrations: Map[Int, JsonMigration] = Map.empty) {
-    def canMigrate(fromVersion: Int): Boolean = migrations.contains(fromVersion)
-
-    def migrate(json: JsValue, fromVersion: Int): JsValue = {
-      migrations.get(fromVersion).map(_.apply(json)).getOrElse(
-        throw MissingJsonMigrationException(fromVersion, Version.numberFor[V])
-      )
-    }
-
-    def to[NextV <: Version: VersionInfo](migration: JsonMigration)(implicit isNextAfter: IsNextAfter[NextV, V]) = {
-      new JsonMigrator[NextV](
-        migrations.mapValues(_ && migration) + (Version.numberFor[NextV] -> JsonMigration.Identity)
-      )
-    }
-  }
-
-  /**
-   * Simple abstract marker superclass to unify the two internal implementations.
+   * Simple abstract marker superclass to unify (and hide) the two internal Persister implementations.
    */
   sealed abstract class JsonPersister[T: RootJsonFormat: ClassTag, V <: Version: VersionInfo](key: String) extends Persister[T, V](key) {
     private[json] def cannotUnpersist(p: Persisted) =
