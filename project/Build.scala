@@ -21,7 +21,8 @@ object Build extends Build {
     .settings(basicSettings: _*)
     .aggregate(
       core,
-      json
+      json,
+      testkit
     )
 
   lazy val core = Project("stamina-core", file("stamina-core"))
@@ -55,8 +56,9 @@ object Build extends Build {
     .dependsOn(core)
     .settings(libSettings: _*)
     .settings(libraryDependencies ++=
-      test(
-        scalatest
+      compile(
+        scalatest,
+        base64
       )
     )
 
