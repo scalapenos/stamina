@@ -7,19 +7,18 @@ import scala.annotation.tailrec
 trait StaminaTestKit { self: org.scalatest.WordSpecLike ⇒
 
   val defaultSampleId = "default"
-  case class PersistableSample(sampleId: String, persistable: Persistable, description: Option[String]) {
+  case class PersistableSample(sampleId: String, persistable: AnyRef, description: Option[String]) {
     override def toString = persistable.getClass.getSimpleName + description.map(" " + _).getOrElse("")
   }
 
-  def sample(persistable: Persistable) = new PersistableSample(defaultSampleId, persistable, None)
-  def sample(sampleId: String, persistable: Persistable) = new PersistableSample(sampleId, persistable, Some(sampleId))
-  def sample(sampleId: String, persistable: Persistable, description: String) = new PersistableSample(sampleId, persistable, Some(description))
+  def sample(persistable: AnyRef) = new PersistableSample(defaultSampleId, persistable, None)
+  def sample(sampleId: String, persistable: AnyRef) = new PersistableSample(sampleId, persistable, Some(sampleId))
+  def sample(sampleId: String, persistable: AnyRef, description: String) = new PersistableSample(sampleId, persistable, Some(description))
 
   implicit class TestablePersisters(persisters: Persisters) extends org.scalatest.Matchers {
     def generateTestsFor(samples: PersistableSample*): Unit = {
       samples.foreach { sample ⇒
         performRoundtrip(sample)
-        saveByteArrayIfNotExists(sample)
         deserializeStoredVersions(sample)
       }
       // Here we could verify test coverage
@@ -43,7 +42,7 @@ trait StaminaTestKit { self: org.scalatest.WordSpecLike ⇒
         deserializeStoredVersions(sample, fromVersion + 1)
     }
 
-    def latestVersion(persistable: Persistable) = persisters.persisters.find(_.canPersist(persistable)).map(_.currentVersion).max
+    def latestVersion(persistable: AnyRef) = persisters.persisters.find(_.canPersist(persistable)).map(_.currentVersion).max
 
     private def verifyByteStringDeserialization(sample: PersistableSample, version: Int): Unit = {
       val serialized = persisters.persist(sample.persistable)
@@ -53,41 +52,33 @@ trait StaminaTestKit { self: org.scalatest.WordSpecLike ⇒
         case Failure(x: java.io.FileNotFoundException) if version < latestVersion(sample.persistable) ⇒
           ()
         case Failure(other) ⇒
-          fail(s"The file /src/test/resources/serialization/${filename(serialized.key, version, sample.sampleId)} for $sample is missing in the /src/test/resources/serialization serialization resource directory.")
-      }
-    }
-
-    private def saveByteArrayIfNotExists(sample: PersistableSample) = {
-      val version = latestVersion(sample.persistable)
-      val persisted = persisters.persist(sample.persistable)
-      byteStringFromFile(persisted.key, version, sample.sampleId) recover {
-        case _ ⇒
-          saveByteArrayToSerializationResourceDirectory(persisted.bytes.toArray, persisted.key, version, sample.sampleId)
+          val writtenToPath = saveByteArrayToTargetSerializationDirectory(serialized.bytes.toArray, serialized.key, version, sample.sampleId)
+          fail(s"The file /src/test/resources/serialization/${filename(serialized.key, version, sample.sampleId)} for $sample is missing in the /src/test/resources/serialization serialization resource directory.\n" +
+            s"Serialization file written to: $writtenToPath. Please copy this file to: /src/test/resources/serialization/")
       }
     }
 
     private def byteStringFromFile(key: String, version: Int, sampleId: String) = {
-      import java.nio.file._
-      import scala.util.control.Exception._
       import scala.io.Source
-
       val resourceName = s"/serialization/${filename(key, version, sampleId)}"
       val isOpt = Option(this.getClass.getResourceAsStream(resourceName))
-
       isOpt
         .map(is ⇒ Try(Persisted(key, version, akka.util.ByteString(base64.Decode(Source.fromInputStream(is).mkString).right.get))))
         .getOrElse(Failure(new java.io.FileNotFoundException(resourceName)))
-
     }
 
-    private def saveByteArrayToSerializationResourceDirectory(bytes: Array[Byte], key: String, version: Int, sampleId: String) = {
+    private def saveByteArrayToTargetSerializationDirectory(bytes: Array[Byte], key: String, version: Int, sampleId: String) = {
       import java.nio.file._
-      Files.write(Paths.get(serializationResourcePath, filename(key, version, sampleId)), base64.Encode(bytes), StandardOpenOption.CREATE)
+      val path = Paths.get(targetSerializationDirectory, filename(key, version, sampleId))
+      Files.write(path, base64.Encode(bytes), StandardOpenOption.CREATE)
+      path.toAbsolutePath
     }
 
     private def filename(key: String, version: Int, sampleId: String) = s"$key-v$version-" + sampleId.replaceAll("\\s+", "-")
 
-    private def serializationResourcePath = s"$projectPath/src/test/resources/serialization"
+    def targetSerializationDirectory = tempTargetSerializationDirectory
+    val projectTargetSerializationDirectory = s"$projectPath/src/test/resources/serialization"
+    val tempTargetSerializationDirectory = System.getProperty("java.io.tmpdir")
     private def projectPath = currentPath.substring(0, currentPath.indexOf("/target"))
     private def currentPath = getClass.getResource("").getPath
   }
