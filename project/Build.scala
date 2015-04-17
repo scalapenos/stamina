@@ -8,8 +8,8 @@ object Build extends Build {
   lazy val basicSettings = Seq(
     organization := "com.scalapenos",
     version := "0.1.0",
-    scalaVersion := "2.11.5",
-    crossScalaVersions := Seq("2.11.5", "2.10.4"),
+    scalaVersion := "2.11.6",
+    crossScalaVersions := Seq("2.11.6", "2.10.5"),
     crossVersion := CrossVersion.binary,
     scalacOptions := basicScalacOptions,
     incOptions := incOptions.value.withNameHashing(true)
