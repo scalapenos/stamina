@@ -1,4 +1,4 @@
-![Version](https://img.shields.io/badge/version-unreleased-brightgreen.svg?style=flat "unreleased") ![License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat "MIT")[![Build Status](https://api.travis-ci.org/scalapenos/stamina.png?branch=master)](https://travis-ci.org/scalapenos/stamina)
+![Version](https://img.shields.io/badge/version-unreleased-brightgreen.svg?style=flat "unreleased") ![License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat "MIT") [![Build Status](https://api.travis-ci.org/scalapenos/stamina.png?branch=master)](https://travis-ci.org/scalapenos/stamina)
 
 ## THIS PROJECT/README IS UNDER CONSTRUCTION!
 Stamina is not ready for prime-time yet but that will hopefully change soon. Do feel free to browse, comment, create issues, pull requests, etc. as long as you realize that nothing has been set into stone yet.
