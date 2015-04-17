@@ -39,7 +39,7 @@ object V3 {
 
 sealed trait V4 extends Version
 object V4 {
-  implicit object Info extends VersionInfo[V4](3) with MigratableVersion[V4] with IsNextVersionAfter[V4, V3]
+  implicit object Info extends VersionInfo[V4](4) with MigratableVersion[V4] with IsNextVersionAfter[V4, V3]
 }
 
 sealed trait V5 extends Version
