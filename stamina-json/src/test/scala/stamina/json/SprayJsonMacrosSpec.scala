@@ -1,5 +1,4 @@
-package stamina
-package json
+package stamina.json
 
 class SprayJsonMacrosSpec extends StaminaJsonSpec {
   import JsonTestDomain._
@@ -12,6 +11,8 @@ class SprayJsonMacrosSpec extends StaminaJsonSpec {
       implicitly[RootJsonFormat[ItemV1]]
       implicitly[RootJsonFormat[CartV1]]
       implicitly[RootJsonFormat[CartCreatedV1]]
+
+      // TODO: add negative (i.e. shol not compile) test cases using shapeless.
     }
 
     "generate lazy RootJsonFormats for recursive case classes" ignore {
