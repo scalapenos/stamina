@@ -68,11 +68,8 @@ object Build extends Build {
     "-deprecation",
     "-language:_",
     "-Xlint",
-    "-Xlog-reflective-calls"
-  )
-
-  val fussyScalacOptions = basicScalacOptions ++ Seq(
-    "-Ywarn-unused",
+    "-Xlog-reflective-calls",
+        "-Ywarn-unused",
     "-Ywarn-unused-import"
   )
 }
