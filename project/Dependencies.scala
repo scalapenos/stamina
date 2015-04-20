@@ -3,8 +3,12 @@ import sbt.Keys._
 
 object Dependencies {
   val akkaActor     = "com.typesafe.akka"  %% "akka-actor"       % "2.3.9"
+
   val sprayJson     = "io.spray"           %% "spray-json"       % "1.3.1"
   val jsonLenses    = "net.virtual-void"   %% "json-lenses"      % "0.6.0"
+
+  val avro          = "org.apache.avro"    %  "avro"             % "1.7.7"
+
   val scalatest     = "org.scalatest"      %% "scalatest"        % "2.2.4"
 
   // Dependency on the version of scala-reflect linked to the cross-build scala version

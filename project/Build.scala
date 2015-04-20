@@ -20,11 +20,12 @@ object Build extends Build {
   lazy val root = Project("stamina", file("."))
     .settings(basicSettings: _*)
     .aggregate(
-      core,
-      json
+      staminaCore,
+      staminaJson,
+      staminaAvro
     )
 
-  lazy val core = Project("stamina-core", file("stamina-core"))
+  lazy val staminaCore = Project("stamina-core", file("stamina-core"))
     .settings(libSettings: _*)
     .settings(libraryDependencies ++=
       compile(
@@ -37,8 +38,8 @@ object Build extends Build {
       )
     )
 
-  lazy val json = Project("stamina-json", file("stamina-json"))
-    .dependsOn(core)
+  lazy val staminaJson = Project("stamina-json", file("stamina-json"))
+    .dependsOn(staminaCore)
     .settings(libSettings: _*)
     .settings(libraryDependencies ++=
       compile(
@@ -51,8 +52,21 @@ object Build extends Build {
       )
     )
 
+  lazy val staminaAvro = Project("stamina-avro", file("stamina-avro"))
+    .dependsOn(staminaCore)
+    .settings(libSettings: _*)
+    .settings(libraryDependencies ++=
+      compile(
+        avro
+      ) ++
+      quasiQuotes(scalaVersion.value) ++
+      test(
+        scalatest
+      )
+    )
+
   lazy val testkit = Project("stamina-testkit", file("stamina-testkit"))
-    .dependsOn(core)
+    .dependsOn(staminaCore)
     .settings(libSettings: _*)
     .settings(libraryDependencies ++=
       test(
