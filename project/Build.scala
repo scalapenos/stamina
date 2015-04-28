@@ -11,8 +11,17 @@ object Build extends Build {
     scalaVersion := "2.11.6",
     crossScalaVersions := Seq("2.11.6", "2.10.5"),
     crossVersion := CrossVersion.binary,
-    scalacOptions := basicScalacOptions,
-    incOptions := incOptions.value.withNameHashing(true)
+    incOptions := incOptions.value.withNameHashing(true),
+    scalacOptions := Seq(
+      "-encoding", "utf8",
+      "-target:jvm-1.7",
+      "-feature",
+      "-unchecked",
+      "-deprecation",
+      "-language:_",
+      "-Xlint",
+      "-Xlog-reflective-calls"
+    ) ++ versionSpecificScalacOptions(scalaVersion.value)
   )
 
   lazy val libSettings = basicSettings ++ formattingSettings
@@ -60,19 +69,10 @@ object Build extends Build {
       )
     )
 
-  val basicScalacOptions = Seq(
-    "-encoding", "utf8",
-    "-target:jvm-1.7",
-    "-feature",
-    "-unchecked",
-    "-deprecation",
-    "-language:_",
-    "-Xlint",
-    "-Xlog-reflective-calls"
-  )
-
-  val fussyScalacOptions = basicScalacOptions ++ Seq(
-    "-Ywarn-unused",
-    "-Ywarn-unused-import"
-  )
+  private def versionSpecificScalacOptions(versionOfScala: String): Seq[String] = {
+    CrossVersion.partialVersion(versionOfScala) match {
+      case Some((major, minor)) if major >= 2 && minor >= 11 => Seq("-Ywarn-unused", "-Ywarn-unused-import")
+      case _ => Nil
+    }
+  }
 }
