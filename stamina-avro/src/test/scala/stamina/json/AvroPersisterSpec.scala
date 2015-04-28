@@ -17,10 +17,10 @@ class AvroPersisterSpec extends StaminaAvroSpec {
   // )
 
   "V1 persisters produced by SprayJsonPersister" should {
-    "correctly persist and unpersist domain events " in {
-      import v1CartCreatedPersister._
-      unpersist(persist(v1CartCreated)) should equal(v1CartCreated)
-    }
+    // "correctly persist and unpersist domain events " in {
+    //   import v1CartCreatedPersister._
+    //   unpersist(persist(v1CartCreated)) should equal(v1CartCreated)
+    // }
   }
 
   "A hand-coded Avro schema for CartCreatedV1" should {
@@ -40,7 +40,7 @@ class AvroPersisterSpec extends StaminaAvroSpec {
           .name("cart").`type`.record("cart")
             .fields
               .name("id").`type`.intType.noDefault
-              .name("items").`type`.array.items.record("items")
+              .name("items").`type`.array.items.record("item")
                 .fields
                   .name("id").`type`.intType.noDefault
                   .name("name").`type`.stringType.noDefault
@@ -51,22 +51,43 @@ class AvroPersisterSpec extends StaminaAvroSpec {
         .endRecord
       // format: ON
 
+      val cartSchema = schema.getField("cart").schema()
+      val itemsSchema = cartSchema.getField("items").schema()
+      val itemSchema = itemsSchema.getElementType()
+
+      // println("----------------------------------------------------------------------------------------->")
+      // println(itemSchema.toString(true))
+      // println("----------------------------------------------------------------------------------------->")
+      // println(itemsSchema.toString(true))
+      // println("----------------------------------------------------------------------------------------->")
+      // println(cartSchema.toString(true))
       // println("----------------------------------------------------------------------------------------->")
       // println(schema.toString(true))
       // println("----------------------------------------------------------------------------------------->")
 
-      val record: GenericRecord = new GenericData.Record(schema)
-      val builder = new GenericRecordBuilder(schema)
+      val itemRecords = v1CartCreated.cart.items.map { item ⇒
+        new GenericRecordBuilder(itemSchema).
+          set("id", item.id).
+          set("name", item.name).
+          build()
+      }
 
-      // TODO: turn v1Cart into a GenericRecord
+      import scala.collection.JavaConversions._
 
-      record.put("cart", v1Cart)
+      val cart: GenericRecord = new GenericData.Record(cartSchema)
+
+      cart.put("id", v1CartCreated.cart.id)
+      cart.put("items", new GenericData.Array[GenericData.Record](itemsSchema, itemRecords))
+
+      val cartCreated: GenericRecord = new GenericData.Record(schema)
+
+      cartCreated.put("cart", cart)
 
       val out = new java.io.ByteArrayOutputStream
       val datumWriter = new GenericDatumWriter[GenericRecord](schema)
-      val encoder = new EncoderFactory().jsonEncoder(schema, out, true)
+      val encoder = EncoderFactory.get.jsonEncoder(schema, out, true)
 
-      datumWriter.write(record, encoder)
+      datumWriter.write(cartCreated, encoder)
       encoder.flush
 
       println("----------------------------------------------------------------------------------------->")
