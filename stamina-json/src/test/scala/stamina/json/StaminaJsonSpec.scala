@@ -1,4 +1,4 @@
-package stamina
+package stamina.json
 
 import org.scalatest._
 

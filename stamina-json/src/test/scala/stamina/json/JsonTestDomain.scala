@@ -1,4 +1,4 @@
-package stamina
+package stamina.json
 
 object JsonTestDomain {
   type ItemId = Int

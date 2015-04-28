@@ -1,6 +1,5 @@
 package stamina
 
-import scala.util._
 import akka.serialization._
 
 /**
