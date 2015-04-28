@@ -18,38 +18,35 @@ trait StaminaTestKit { self: org.scalatest.WordSpecLike ⇒
   implicit class TestablePersisters(persisters: Persisters) extends org.scalatest.Matchers {
     def generateTestsFor(samples: PersistableSample*): Unit = {
       samples.foreach { sample ⇒
-        performRoundtrip(sample)
-        deserializeStoredVersions(sample)
+        generateRoundtripTestFor(sample)
+        generateStoredVersionsDeserializationTestsFor(sample)
       }
       // Here we could verify test coverage
     }
 
-    private def performRoundtrip(sample: PersistableSample) = {
+    private def generateRoundtripTestFor(sample: PersistableSample) = {
       s"persist and unpersist $sample" in {
-        persisters.canPersist(sample.persistable) should be(true)
         persisters.unpersist(persisters.persist(sample.persistable)) should equal(sample.persistable)
       }
     }
 
-    @tailrec
-    private def deserializeStoredVersions(sample: PersistableSample, fromVersion: Int = 1): Unit = {
-
-      s"deserialize the stored serialized form of $sample version $fromVersion" in {
-        verifyByteStringDeserialization(sample, fromVersion)
-      }
-
-      if (fromVersion < latestVersion(sample.persistable))
-        deserializeStoredVersions(sample, fromVersion + 1)
+    private def generateStoredVersionsDeserializationTestsFor(sample: PersistableSample, fromVersion: Int = 1): Unit = {
+      latestVersion(sample.persistable).map(latestVersion ⇒
+        Range.inclusive(fromVersion, latestVersion).foreach { version ⇒
+          s"deserialize the stored serialized form of $sample version $version" in {
+            verifyByteStringDeserialization(sample, version, latestVersion)
+          }
+        })
     }
 
-    def latestVersion(persistable: AnyRef) = persisters.persisters.find(_.canPersist(persistable)).map(_.currentVersion).max
+    def latestVersion(persistable: AnyRef) = Try(persisters.persisters.filter(_.canPersist(persistable)).map(_.currentVersion).max).toOption
 
-    private def verifyByteStringDeserialization(sample: PersistableSample, version: Int): Unit = {
+    private def verifyByteStringDeserialization(sample: PersistableSample, version: Int, latestVersion: Int): Unit = {
       val serialized = persisters.persist(sample.persistable)
       byteStringFromFile(serialized.key, version, sample.sampleId) match {
         case Success(binary) ⇒
-          persisters.unpersist(binary) should be(sample.persistable)
-        case Failure(x: java.io.FileNotFoundException) if version < latestVersion(sample.persistable) ⇒
+          persisters.unpersist(binary) should equal(sample.persistable)
+        case Failure(x: java.io.FileNotFoundException) if version < latestVersion ⇒
           ()
         case Failure(other) ⇒
           val writtenToPath = saveByteArrayToTargetSerializationDirectory(serialized.bytes.toArray, serialized.key, version, sample.sampleId)
