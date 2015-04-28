@@ -6,7 +6,9 @@ Stamina is not ready for prime-time yet but that will hopefully change soon. Do 
 ## Current status
 *stamina-core* and *stamina-json* are looking quite finished already and we're happy wth the API that has evolved out of the many experiments we tried recently. The core API might change slightly when we try to implement a second serialization framework and we might promote (parts of) of the migration DSL from stamina-json into the core API.
 
-Next modules to be built: *stamina-testkit* and *stamina-sample-app*.
+[stamina-testkit](stamina-testkit) can be used to generate scalatest tests for your stamina persisters.
+
+A *stamina-sample-app* is still in the works.
 
 Possible candidates for supported serialization formats being researched: *stamina-avro*, *stamina-pickling*.
 
