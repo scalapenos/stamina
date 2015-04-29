@@ -20,7 +20,7 @@ class BasketActorAkkaSerializationSpec extends UnitSpec with ScalaTestKit {
   val timestamp = "2015-01-01T12:34:56.000Z".toDateTime
   val code = "EXAMPLE_CODE"
 
-  "The BasketActor akka serialization" should {
+  "The BasketActor persister" should {
     persisters.generateTestsFor(
       sample(CouponClaimedEvent(code, timestamp)),
       sample(BasketDeletedEvent(timestamp)),
