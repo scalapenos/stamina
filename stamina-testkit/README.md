@@ -36,7 +36,7 @@ This will generate tests like this:
 (master) root: testOnly *BasketActorAkka*
 [info] Compiling 1 Scala source to /home/aengelen/xebia/stamina-example/target/scala-2.11/classes...
 [info] BasketActorAkkaSerializationSpec:
-[info] The BasketActor akka serialization
+[info] The BasketActor persister
 [info] - should persist and unpersist CouponClaimedEvent
 [info] - should deserialize the stored serialized form of CouponClaimedEvent version 1
 [info] - should persist and unpersist BasketDeletedEvent
