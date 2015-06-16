@@ -51,7 +51,7 @@ trait StaminaTestKit { self: org.scalatest.WordSpecLike ⇒
           fail(s"You appear to have added a new serialization sample to the stamina persisters' test.\n" +
             "A serialized version of this sample must be stored as a project resource for future reference, to ensure future versions of the software can still correctly deserialize serialized objects in this format.\n" +
             "Please copy the generated serialized data into the project test resources:\n" +
-            s"  cp $writtenToPath PROJECT_PATH/src/test/resources/serialization")
+            s"  cp $writtenToPath $$PROJECT_PATH/src/test/resources/$serializedObjectsPackage")
 
         case Failure(_: java.io.FileNotFoundException) if version < latestVersion ⇒
           fail(s"While testing that the older serialized version $version of sample with key ${serialized.key} and sample id ${sample.sampleId} was not found")
@@ -69,7 +69,7 @@ trait StaminaTestKit { self: org.scalatest.WordSpecLike ⇒
 
     private def byteStringFromResource(key: String, version: Int, sampleId: String): Try[Persisted] = {
       import scala.io.Source
-      val resourceName = s"/serialization/${filename(key, version, sampleId)}"
+      val resourceName = s"/$serializedObjectsPackage/${filename(key, version, sampleId)}"
 
       Option(this.getClass.getResourceAsStream(resourceName))
         .map(Success(_)).getOrElse(Failure(new java.io.FileNotFoundException(resourceName)))
@@ -81,17 +81,14 @@ trait StaminaTestKit { self: org.scalatest.WordSpecLike ⇒
 
     private def saveByteArrayToTargetSerializationDirectory(bytes: Array[Byte], key: String, version: Int, sampleId: String) = {
       import java.nio.file._
-      val path = Paths.get(targetSerializationDirectory, filename(key, version, sampleId))
+      val path = Paths.get(targetDirectoryForExampleSerializations, filename(key, version, sampleId))
       Files.write(path, base64.Encode(bytes), StandardOpenOption.CREATE)
       path.toAbsolutePath
     }
 
     private def filename(key: String, version: Int, sampleId: String) = s"$key-v$version-" + sampleId.replaceAll("\\s+", "-")
 
-    def targetSerializationDirectory = tempTargetSerializationDirectory
-    val projectTargetSerializationDirectory = s"$projectPath/src/test/resources/serialization"
-    val tempTargetSerializationDirectory = System.getProperty("java.io.tmpdir")
-    private def projectPath = currentPath.substring(0, currentPath.indexOf("/target"))
-    private def currentPath = getClass.getResource("").getPath
+    val targetDirectoryForExampleSerializations = System.getProperty("java.io.tmpdir")
+    val serializedObjectsPackage = "serialization"
   }
 }
