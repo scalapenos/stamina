@@ -48,12 +48,15 @@ trait StaminaTestKit { self: org.scalatest.WordSpecLike ⇒
           persisters.unpersist(binary) should equal(sample.persistable)
         case Failure(_: java.io.FileNotFoundException) if version == latestVersion ⇒
           val writtenToPath = saveByteArrayToTargetSerializationDirectory(serialized.bytes.toArray, serialized.key, version, sample.sampleId)
-          fail(s"The file /src/test/resources/serialization/${filename(serialized.key, version, sample.sampleId)} for $sample is missing in the /src/test/resources/serialization serialization resource directory.\n" +
-            s"Serialization file written to: $writtenToPath. Please copy this file to: /src/test/resources/serialization/")
-        case Failure(x: java.io.FileNotFoundException) if version < latestVersion ⇒
-          fail(s"The file ${x.getMessage()} was not found")
+          fail(s"You appear to have added a new serialization sample to the stamina persisters' test.\n" +
+            "A serialized version of this sample must be stored as a project resource for future reference, to ensure future versions of the software can still correctly deserialize serialized objects in this format.\n" +
+            "Please copy the generated serialized data into the project test resources:\n" +
+            s"  cp $writtenToPath PROJECT_PATH/src/test/resources/serialization")
+
+        case Failure(_: java.io.FileNotFoundException) if version < latestVersion ⇒
+          fail(s"While testing that the older serialized version $version of sample with key ${serialized.key} and sample id ${sample.sampleId} was not found")
         case Failure(other) ⇒
-          fail("Failed to decode serialized message", other)
+          fail(s"Failure while decoding serialized version $version of sample with key ${serialized.key} and sample id ${sample.sampleId} was not found", other)
       }
     }
 
