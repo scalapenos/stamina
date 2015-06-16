@@ -70,7 +70,7 @@ with Akka Persistence but didn't.
 
 ### So what's wrong with Akka Persistence?
 Akka Persistence is an awesome library for implementing event
-stores and event-soured persistent actors.
+stores and event-sourced persistent actors.
 
 The problem arises from the fact that Akka Persistence reuses the
 standard Akka serialization system without adding any kind of
