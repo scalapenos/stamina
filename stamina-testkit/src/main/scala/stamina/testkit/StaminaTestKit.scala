@@ -43,25 +43,37 @@ trait StaminaTestKit { self: org.scalatest.WordSpecLike ⇒
 
     private def verifyByteStringDeserialization(sample: PersistableSample, version: Int, latestVersion: Int): Unit = {
       val serialized = persisters.persist(sample.persistable)
-      byteStringFromFile(serialized.key, version, sample.sampleId) match {
+      byteStringFromResource(serialized.key, version, sample.sampleId) match {
         case Success(binary) ⇒
           persisters.unpersist(binary) should equal(sample.persistable)
-        case Failure(x: java.io.FileNotFoundException) if version < latestVersion ⇒
-          ()
-        case Failure(other) ⇒
+        case Failure(_: java.io.FileNotFoundException) if version == latestVersion ⇒
           val writtenToPath = saveByteArrayToTargetSerializationDirectory(serialized.bytes.toArray, serialized.key, version, sample.sampleId)
           fail(s"The file /src/test/resources/serialization/${filename(serialized.key, version, sample.sampleId)} for $sample is missing in the /src/test/resources/serialization serialization resource directory.\n" +
             s"Serialization file written to: $writtenToPath. Please copy this file to: /src/test/resources/serialization/")
+        case Failure(x: java.io.FileNotFoundException) if version < latestVersion ⇒
+          fail(s"The file ${x.getMessage()} was not found")
+        case Failure(other) ⇒
+          fail("Failed to decode serialized message", other)
       }
     }
 
-    private def byteStringFromFile(key: String, version: Int, sampleId: String) = {
+    implicit def eitherToTry[B](either: Either[base64.Decode.Failure, B]): Try[B] = {
+      either match {
+        case Right(obj) ⇒ Success(obj)
+        case Left(err)  ⇒ Failure(new IllegalArgumentException(err.toString))
+      }
+    }
+
+    private def byteStringFromResource(key: String, version: Int, sampleId: String): Try[Persisted] = {
       import scala.io.Source
       val resourceName = s"/serialization/${filename(key, version, sampleId)}"
-      val isOpt = Option(this.getClass.getResourceAsStream(resourceName))
-      isOpt
-        .map(is ⇒ Try(Persisted(key, version, akka.util.ByteString(base64.Decode(Source.fromInputStream(is).mkString).right.get))))
-        .getOrElse(Failure(new java.io.FileNotFoundException(resourceName)))
+
+      Option(this.getClass.getResourceAsStream(resourceName))
+        .map(Success(_)).getOrElse(Failure(new java.io.FileNotFoundException(resourceName)))
+        .map(Source.fromInputStream(_).mkString)
+        .flatMap(base64.Decode(_))
+        .map(akka.util.ByteString(_))
+        .map(Persisted(key, version, _))
     }
 
     private def saveByteArrayToTargetSerializationDirectory(bytes: Array[Byte], key: String, version: Int, sampleId: String) = {
