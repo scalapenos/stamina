@@ -1,23 +1,25 @@
-![Version](https://img.shields.io/badge/version-unreleased-orange.svg?style=flat "unreleased") [![Build Status](https://img.shields.io/travis/scalapenos/stamina.svg?style=flat)](https://travis-ci.org/scalapenos/stamina) ![License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat "MIT") [![Join the chat at https://gitter.im/scalapenos/stamina](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/scalapenos/stamina)
+![Version](https://img.shields.io/badge/version-unreleased-orange.svg?style=flat "unreleased") [![Build Status](https://img.shields.io/travis/scalapenos/stamina.svg?style=flat)](https://travis-ci.org/scalapenos/stamina) ![License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat "MIT")
 
-## THIS PROJECT/README IS UNDER CONSTRUCTION!
-Stamina is not ready for prime-time yet but that will hopefully change soon. Do feel free to browse, comment, create issues, pull requests, etc. as long as you realize that nothing has been set into stone yet.
+Stamina is an Akka serialization toolkit written specifically for use with Akka Persistence.
+It has a strong focus on long-term viability of your persisted data so it provides support for **versioning** that data, **auto-migrating** that data at read time to be compatible with your current event and domain classes, and a **testkit** to make sure all older versions of your persisted data are still readable.
+
+Do feel free to browse, comment, create issues, pull requests, etc. If you are interested in using Stamina, please feel welcome to join our chat room
+
+[![Join the chat at https://gitter.im/scalapenos/stamina](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/scalapenos/stamina)
+
+We are still finishing up the last open ends before we release a public version but in the mean time Stamina (and some of its less fancy predecessors) has been running in production for many months now without any problems.
+
 
 ## Current status
-*stamina-core* and *stamina-json* are looking quite finished already and we're happy wth the API that has evolved out of the many experiments we tried recently. The core API might change slightly when we try to implement a second serialization framework and we might promote (parts of) of the migration DSL from stamina-json into the core API.
+[stamina-core](stamina-core) and [stamina-json](stamina-json) are pretty much ready for a first beta release and we are happy wth the API that has evolved out of the many experiments we have done over the last year.
 
-[stamina-testkit](stamina-testkit) can be used to generate scalatest tests for your stamina persisters.
+[stamina-testkit](stamina-testkit) is also mostly finished. It can be used to generate scalatest tests for your stamina persisters, keeping serialized older versions of your data around to make sure you don't accidentily break compatibility.
 
-A *stamina-sample-app* is still in the works.
-
-Possible candidates for supported serialization formats being researched: *stamina-avro*, *stamina-pickling*.
-
-The contents of this README will be frequently updated to reflect the current status.
+Our final task before releasing a public beta is to create a *stamina-sample-app* to show Stamina in action on a representative project.
 
 
-# Stamina
-Stamina is an Akka Serializer toolkit written specifically for use with Akka
-Persistence. Its main defining characteristics are:
+# Stamina in Detail
+Stamina is an Akka serialization toolkit written specifically for use with Akka Persistence. Its main defining characteristics are:
 
 - support for explicitly versioning serialized data. Stamina always stores a version number with the serialized data.
 - support for explicitly migrating serialized data written for older versions to the latest version
@@ -65,52 +67,26 @@ Support for Apache Avro and Scala's own pickling formats is pending.
 
 
 ## Why?
-Stamina aims to be the serialization toolkit that should have come
-with Akka Persistence but didn't.
+Stamina aims to be the serialization toolkit that should have come with Akka Persistence but didn't.
 
 ### So what's wrong with Akka Persistence?
-Akka Persistence is an awesome library for implementing event
-stores and event-sourced persistent actors.
+Akka Persistence is an awesome library for implementing event stores and event-sourced persistent actors.
 
-The problem arises from the fact that Akka Persistence reuses the
-standard Akka serialization system without adding any kind of
-support for data versioning or deserialization of older versions of
-persisted data.
+The problem arises from the fact that Akka Persistence reuses the standard Akka serialization system without adding any kind of support for data versioning or deserialization of older versions of persisted data.
 
-This has lead to people having to maintain multiple older versions
-of their domain/event model in parallel or to somehow work around
-this limitation. This project has grown out of one such workaround.
+This has lead to people having to maintain multiple older versions of their domain/event model in parallel or to somehow work around this limitation. This project has grown out of one such workaround.
 
-The Akka serialization system was originally written to support remote
-actors and clustered actors. It is optimized for raw performance and
-low configuration overhead but it assumes that the code that
-serializes your data is the exact same code that deserializes it
-later. This is not necessarily the case in an event store, where data
-might have been serialized by an older iteration of your code.
+The Akka serialization system was originally written to support remote actors and clustered actors. It is optimized for raw performance and low configuration overhead but it assumes that the code that serializes your data is the exact same code that deserializes it later. This is not necessarily the case in an event store, where data might have been serialized by an older iteration of your code.
 
-An event store without some kind of versioning/migration system is not
-very useful in our opinion so we set out to provide these features in
-a way that is backwards compatible with Akka Persistence.
+An event store without some kind of versioning/migration system is not very useful in our opinion so we set out to provide these features in a way that is backwards compatible with Akka Persistence.
 
-Some other problems with the existing Akka serialization system
-(and many other serialization libraries) are:
+Some other problems with the existing Akka serialization system (and many other serialization libraries) are:
 
-- coupling between the serialized data and a specific Java/Scala class
-or class name, usually even a fully qualified one. This creates a
-barrier to refactoring of the domain model, something that is very
-necessary to keep active code bases healthy and clean. Renaming and
-repackaging of such classes is no longer possible without losing
-backwards compatibility with your already persisted versions.
+- coupling between the serialized data and a specific Java/Scala class or class name, usually even a fully qualified one. This creates a barrier to refactoring of the domain model, something that is very necessary to keep active code bases healthy and clean. Renaming and repackaging of such classes is no longer possible without losing backwards compatibility with your already persisted versions.
 
-- no high-level API for configuring which classes get serialized how.
-The only available option is linking the fully qualified class name of
-a specific class (or superclass) to the fully qualified classname of a
-serializer. This allows for very little flexibility, no support for
-versioning or migrations, and leads to having to write lots of explicit,
-low-level serialization code.
+- no high-level API for configuring which classes get serialized how. The only available option is linking the fully qualified class name of a specific class (or superclass) to the fully qualified classname of a serializer. This allows for very little flexibility, no support for versioning or migrations, and leads to having to write lots of explicit, low-level serialization code.
 
-Most of these problems arise from the simple fact that versioning and
-migration were never part of the design of such serialization systems.
+Most of these problems arise from the simple fact that versioning and migration were never part of the design of such serialization systems.
 
 
 ## Goals / Approach
