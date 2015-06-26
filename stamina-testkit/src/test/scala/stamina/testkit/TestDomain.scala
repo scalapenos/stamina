@@ -1,7 +1,5 @@
 package stamina.testkit
 
-import stamina.Persistable
-
 object TestDomain {
   type ItemId = Int
   type CartId = Int
