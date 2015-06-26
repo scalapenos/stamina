@@ -9,9 +9,11 @@ class StaminaAkkaSerializerSpec extends StaminaSpec {
   val cartPersister = persister[Cart]("cart")
   val cartCreatedPersister = persister[CartCreated]("cart-created")
 
-  val persisters = Persisters(itemPersister, cartPersister, cartCreatedPersister)
+  class MyAkkaSerializer1a extends StaminaAkkaSerializer(List(itemPersister, cartPersister, cartCreatedPersister))
+  class MyAkkaSerializer1b extends StaminaAkkaSerializer(List(itemPersister, cartPersister, cartCreatedPersister), DefaultPersistedCodec)
+  class MyAkkaSerializer2 extends StaminaAkkaSerializer(itemPersister, cartPersister, cartCreatedPersister)
 
-  val serializer = new StaminaAkkaSerializer(persisters) {}
+  val serializer = new MyAkkaSerializer1a
 
   import serializer._
 
