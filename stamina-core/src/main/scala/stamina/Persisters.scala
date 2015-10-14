@@ -11,19 +11,38 @@ import scala.reflect.ClassTag
  */
 case class Persisters(persisters: List[Persister[_, _]]) {
   def canPersist(a: AnyRef): Boolean = persisters.exists(_.canPersist(a))
-  def canUnpersist(p: Persisted): Boolean = persisters.exists(_.canUnpersist(p))
+  def canUnpersist(manifest: String): Boolean = persisters.exists(_.canUnpersist(manifest))
 
   // format: OFF
-  def persist(anyref: AnyRef): Persisted = {
+  def manifest(anyref: AnyRef): String = {
+    persisters.find(_.canPersist(anyref))
+              .map(_.currentManifest)
+              .getOrElse(throw UnregisteredTypeException(anyref))
+  }
+
+  def persist(anyref: AnyRef): Array[Byte] = {
     persisters.find(_.canPersist(anyref))
               .map(_.persistAny(anyref))
               .getOrElse(throw UnregisteredTypeException(anyref))
   }
 
+  def unpersist(manifest: String, persisted: Array[Byte]): AnyRef = {
+    persisters.find(_.canUnpersist(manifest))
+              .map(_.unpersistAny(manifest, persisted))
+              .getOrElse(throw UnsupportedDataException(Manifest.key(manifest), Manifest.version(manifest)))
+  }
+
+  def persistAndWrap(anyref: AnyRef): Persisted = {
+    persisters.find(_.canPersist(anyref))
+              .map(p => Persisted(p.key, p.currentVersion, p.persistAny(anyref)))
+              .getOrElse(throw UnregisteredTypeException(anyref))
+  }
+
   def unpersist(persisted: Persisted): AnyRef = {
-    persisters.find(_.canUnpersist(persisted))
-              .map(_.unpersistAny(persisted))
-              .getOrElse(throw UnsupportedDataException(persisted))
+    val manifest = Manifest.encode(persisted.key, persisted.version)
+    persisters.find(_.canUnpersist(manifest))
+              .map(_.unpersistAny(manifest, persisted.bytes.toArray))
+              .getOrElse(throw UnsupportedDataException(Manifest.key(manifest), Manifest.version(manifest)))
   }
   // format: ON
 

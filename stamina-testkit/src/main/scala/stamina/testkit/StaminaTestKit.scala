@@ -26,7 +26,7 @@ trait StaminaTestKit { self: org.scalatest.WordSpecLike ⇒
 
     private def generateRoundtripTestFor(sample: PersistableSample) = {
       s"persist and unpersist $sample" in {
-        persisters.unpersist(persisters.persist(sample.persistable)) should equal(sample.persistable)
+        persisters.unpersist(persisters.persistAndWrap(sample.persistable)) should equal(sample.persistable)
       }
     }
 
@@ -42,7 +42,7 @@ trait StaminaTestKit { self: org.scalatest.WordSpecLike ⇒
     def latestVersion(persistable: AnyRef) = Try(persisters.persisters.filter(_.canPersist(persistable)).map(_.currentVersion).max).toOption
 
     private def verifyByteStringDeserialization(sample: PersistableSample, version: Int, latestVersion: Int): Unit = {
-      val serialized = persisters.persist(sample.persistable)
+      val serialized = persisters.persistAndWrap(sample.persistable)
       byteStringFromResource(serialized.key, version, sample.sampleId) match {
         case Success(binary) ⇒
           persisters.unpersist(binary) should equal(sample.persistable)
