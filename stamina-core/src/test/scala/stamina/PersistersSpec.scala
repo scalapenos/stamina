@@ -22,20 +22,20 @@ class PersistersSpec extends StaminaSpec {
     }
 
     "correctly implement canUnpersist()" in {
-      canUnpersist(itemPersister.persist(item1)) should be(true)
-      canUnpersist(cartPersister.persist(cart)) should be(true)
+      canUnpersist(itemPersister.currentManifest) should be(true)
+      canUnpersist(cartPersister.currentManifest) should be(true)
 
-      canUnpersist(cartCreatedPersister.persist(cartCreated)) should be(false)
-      canUnpersist(Persisted("unknown", 1, ByteString("..."))) should be(false)
-      canUnpersist(Persisted("item", 2, ByteString("..."))) should be(false)
+      canUnpersist(cartCreatedPersister.currentManifest) should be(false)
+      canUnpersist(Manifest.encode("unknown", 1)) should be(false)
+      canUnpersist(Manifest.encode("item", 2)) should be(false)
 
       // works because canUnpersist only looks at the key and the version, not at the raw data
-      canUnpersist(Persisted("item", 1, ByteString("Not an item at all!"))) should be(true)
+      canUnpersist(Manifest.encode("item", 1)) should be(true)
     }
 
     "correctly implement persist() and unpersist()" in {
-      unpersist(persist(item1)) should equal(item1)
-      unpersist(persist(cart)) should equal(cart)
+      unpersist(persistAndWrap(item1)) should equal(item1)
+      unpersist(persistAndWrap(cart)) should equal(cart)
     }
 
     "throw an UnregisteredTypeException when persisting an unregistered type" in {

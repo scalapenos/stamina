@@ -55,7 +55,9 @@ package object json {
    */
   def persister[T: RootJsonFormat: ClassTag, V <: Version: VersionInfo: MigratableVersion](key: String, migrator: JsonMigrator[V]): JsonPersister[T, V] = new VnJsonPersister[T, V](key, migrator)
 
-  private[json] def toJsonBytes[T](t: T)(implicit writer: RootJsonWriter[T]): ByteString = ByteString(writer.write(t).compactPrint)
+  import java.nio.charset.StandardCharsets
+  val UTF_8: String = StandardCharsets.UTF_8.name()
+  private[json] def toJsonBytes[T](t: T)(implicit writer: RootJsonWriter[T]): Array[Byte] = writer.write(t).compactPrint.getBytes(UTF_8)
   private[json] def fromJsonBytes[T](bytes: ByteString)(implicit reader: RootJsonReader[T]): T = reader.read(parseJson(bytes))
   private[json] def parseJson(bytes: ByteString): JsValue = JsonParser(ParserInput(bytes.toArray))
 }
@@ -70,7 +72,7 @@ package json {
   }
 
   private[json] class V1JsonPersister[T: RootJsonFormat: ClassTag](key: String) extends JsonPersister[T, V1](key) {
-    def persist(t: T): Persisted = Persisted(key, currentVersion, toJsonBytes(t))
+    def persist(t: T): Array[Byte] = toJsonBytes(t)
     def unpersist(p: Persisted): T = {
       if (canUnpersist(p)) fromJsonBytes[T](p.bytes)
       else throw new IllegalArgumentException(cannotUnpersist(p))
@@ -78,9 +80,9 @@ package json {
   }
 
   private[json] class VnJsonPersister[T: RootJsonFormat: ClassTag, V <: Version: VersionInfo: MigratableVersion](key: String, migrator: JsonMigrator[V]) extends JsonPersister[T, V](key) {
-    override def canUnpersist(p: Persisted): Boolean = p.key == key && migrator.canMigrate(p.version)
+    override def canUnpersist(m: String): Boolean = Manifest.key(m) == key && migrator.canMigrate(Manifest.version(m))
 
-    def persist(t: T): Persisted = Persisted(key, currentVersion, toJsonBytes(t))
+    def persist(t: T): Array[Byte] = toJsonBytes(t)
     def unpersist(p: Persisted): T = {
       if (canUnpersist(p)) migrator.migrate(parseJson(p.bytes), p.version).convertTo[T]
       else throw new IllegalArgumentException(cannotUnpersist(p))
