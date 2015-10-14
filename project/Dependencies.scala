@@ -2,7 +2,7 @@ import sbt._
 import sbt.Keys._
 
 object Dependencies {
-  val akkaActor     = "com.typesafe.akka"  %% "akka-actor"       % "2.3.11"
+  val akkaActor     = "com.typesafe.akka"  %% "akka-actor"       % "2.4.0"
   val sprayJson     = "io.spray"           %% "spray-json"       % "1.3.2"
   val jsonLenses    = "net.virtual-void"   %% "json-lenses"      % "0.6.0"
   val scalatest     = "org.scalatest"      %% "scalatest"        % "2.2.5"
