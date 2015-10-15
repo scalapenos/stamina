@@ -58,8 +58,8 @@ package object json {
   import java.nio.charset.StandardCharsets
   val UTF_8: String = StandardCharsets.UTF_8.name()
   private[json] def toJsonBytes[T](t: T)(implicit writer: RootJsonWriter[T]): Array[Byte] = writer.write(t).compactPrint.getBytes(UTF_8)
-  private[json] def fromJsonBytes[T](bytes: ByteString)(implicit reader: RootJsonReader[T]): T = reader.read(parseJson(bytes))
-  private[json] def parseJson(bytes: ByteString): JsValue = JsonParser(ParserInput(bytes.toArray))
+  private[json] def fromJsonBytes[T](bytes: Array[Byte])(implicit reader: RootJsonReader[T]): T = reader.read(parseJson(bytes))
+  private[json] def parseJson(bytes: Array[Byte]): JsValue = JsonParser(ParserInput(bytes.toArray))
 }
 
 package json {
@@ -67,15 +67,15 @@ package json {
    * Simple abstract marker superclass to unify (and hide) the two internal Persister implementations.
    */
   sealed abstract class JsonPersister[T: RootJsonFormat: ClassTag, V <: Version: VersionInfo](key: String) extends Persister[T, V](key) {
-    private[json] def cannotUnpersist(p: Persisted) =
-      s"""JsonPersister[${implicitly[ClassTag[T]].runtimeClass.getSimpleName}, V${currentVersion}](key = "${key}") cannot unpersist data with key "${p.key}" and version ${p.version}."""
+    private[json] def cannotUnpersist(manifest: String) =
+      s"""JsonPersister[${implicitly[ClassTag[T]].runtimeClass.getSimpleName}, V${currentVersion}](key = "${key}") cannot unpersist data with manifest "$manifest"."""
   }
 
   private[json] class V1JsonPersister[T: RootJsonFormat: ClassTag](key: String) extends JsonPersister[T, V1](key) {
     def persist(t: T): Array[Byte] = toJsonBytes(t)
-    def unpersist(p: Persisted): T = {
-      if (canUnpersist(p)) fromJsonBytes[T](p.bytes)
-      else throw new IllegalArgumentException(cannotUnpersist(p))
+    def unpersist(manifest: String, p: Array[Byte]): T = {
+      if (canUnpersist(manifest)) fromJsonBytes[T](p)
+      else throw new IllegalArgumentException(cannotUnpersist(manifest))
     }
   }
 
@@ -83,9 +83,9 @@ package json {
     override def canUnpersist(m: String): Boolean = Manifest.key(m) == key && migrator.canMigrate(Manifest.version(m))
 
     def persist(t: T): Array[Byte] = toJsonBytes(t)
-    def unpersist(p: Persisted): T = {
-      if (canUnpersist(p)) migrator.migrate(parseJson(p.bytes), p.version).convertTo[T]
-      else throw new IllegalArgumentException(cannotUnpersist(p))
+    def unpersist(manifest: String, p: Array[Byte]): T = {
+      if (canUnpersist(manifest)) migrator.migrate(parseJson(p), Manifest.version(manifest)).convertTo[T]
+      else throw new IllegalArgumentException(cannotUnpersist(manifest))
     }
   }
 }

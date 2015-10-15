@@ -11,16 +11,11 @@ import scala.util._
 abstract class Persister[T: ClassTag, V <: Version: VersionInfo](val key: String) {
   lazy val currentVersion = Version.numberFor[V]
 
+  lazy val currentManifest = Manifest.encode(key, currentVersion)
   def persist(t: T): Array[Byte]
-  def unpersist(persisted: Persisted): T
-  def unpersist(manifest: String, persisted: Array[Byte]): T =
-    // TODO I should really remove that one but this is easier for the PoC
-    unpersist(Persisted(Manifest.key(manifest), Manifest.version(manifest), persisted))
+  def unpersist(manifest: String, persisted: Array[Byte]): T
 
   def canPersist(a: AnyRef): Boolean = convertToT(a).isDefined
-  lazy val currentManifest = Manifest.encode(key, currentVersion)
-  /* To be overridden when a Persister can persist multiple versions */
-  def canUnpersist(p: Persisted): Boolean = canUnpersist(Manifest.encode(p.key, p.version))
   def canUnpersist(m: String): Boolean = Manifest.key(m) == key && Manifest.version(m) == currentVersion
 
   private[stamina] def convertToT(any: AnyRef): Option[T] = any match {
