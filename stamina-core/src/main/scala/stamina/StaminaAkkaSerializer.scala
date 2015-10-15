@@ -21,7 +21,7 @@ abstract class StaminaAkkaSerializer private[stamina] (persisters: Persisters) e
   def toBinary(obj: AnyRef): Array[Byte] = {
     if (!persisters.canPersist(obj)) throw UnregisteredTypeException(obj)
 
-    persisters.persist(obj)
+    persisters.bytes(obj)
   }
 
   /**

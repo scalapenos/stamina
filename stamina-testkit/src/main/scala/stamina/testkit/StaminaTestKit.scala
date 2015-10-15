@@ -26,7 +26,7 @@ trait StaminaTestKit { self: org.scalatest.WordSpecLike ⇒
 
     private def generateRoundtripTestFor(sample: PersistableSample) = {
       s"persist and unpersist $sample" in {
-        persisters.unpersist(persisters.persistAndWrap(sample.persistable)) should equal(sample.persistable)
+        persisters.unpersist(persisters.persist(sample.persistable)) should equal(sample.persistable)
       }
     }
 
@@ -42,10 +42,10 @@ trait StaminaTestKit { self: org.scalatest.WordSpecLike ⇒
     def latestVersion(persistable: AnyRef) = Try(persisters.persisters.filter(_.canPersist(persistable)).map(_.currentVersion).max).toOption
 
     private def verifyByteStringDeserialization(sample: PersistableSample, version: Int, latestVersion: Int): Unit = {
-      val serialized = persisters.persistAndWrap(sample.persistable)
+      val serialized = persisters.persist(sample.persistable)
       byteStringFromResource(serialized.key, version, sample.sampleId) match {
         case Success(binary) ⇒
-          persisters.unpersist(binary) should equal(sample.persistable)
+          persisters.unpersist(Manifest(serialized.key, version), binary) should equal(sample.persistable)
         case Failure(_: java.io.FileNotFoundException) if version == latestVersion ⇒
           val writtenToPath = saveByteArrayToTargetSerializationDirectory(serialized.bytes.toArray, serialized.key, version, sample.sampleId)
           fail(s"You appear to have added a new serialization sample to the stamina persisters' test.\n" +
@@ -67,7 +67,7 @@ trait StaminaTestKit { self: org.scalatest.WordSpecLike ⇒
       }
     }
 
-    private def byteStringFromResource(key: String, version: Int, sampleId: String): Try[Persisted] = {
+    private def byteStringFromResource(key: String, version: Int, sampleId: String): Try[Array[Byte]] = {
       import scala.io.Source
       val resourceName = s"/$serializedObjectsPackage/${filename(key, version, sampleId)}"
 
@@ -75,8 +75,6 @@ trait StaminaTestKit { self: org.scalatest.WordSpecLike ⇒
         .map(Success(_)).getOrElse(Failure(new java.io.FileNotFoundException(resourceName)))
         .map(Source.fromInputStream(_).mkString)
         .flatMap(base64.Decode(_))
-        .map(akka.util.ByteString(_))
-        .map(Persisted(key, version, _))
     }
 
     private def saveByteArrayToTargetSerializationDirectory(bytes: Array[Byte], key: String, version: Int, sampleId: String) = {
