@@ -26,11 +26,11 @@ class PersistersSpec extends StaminaSpec {
       canUnpersist(cartPersister.currentManifest) should be(true)
 
       canUnpersist(cartCreatedPersister.currentManifest) should be(false)
-      canUnpersist(Manifest.encode("unknown", 1)) should be(false)
-      canUnpersist(Manifest.encode("item", 2)) should be(false)
+      canUnpersist(Manifest("unknown", 1)) should be(false)
+      canUnpersist(Manifest("item", 2)) should be(false)
 
       // works because canUnpersist only looks at the key and the version, not at the raw data
-      canUnpersist(Manifest.encode("item", 1)) should be(true)
+      canUnpersist(Manifest("item", 1)) should be(true)
     }
 
     "correctly implement persist() and unpersist()" in {

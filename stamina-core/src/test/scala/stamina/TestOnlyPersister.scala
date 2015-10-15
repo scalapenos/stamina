@@ -13,7 +13,7 @@ object TestOnlyPersister {
 
   private class JavaPersister[T <: AnyRef: ClassTag](key: String) extends Persister[T, V1](key) {
     def persist(t: T): Array[Byte] = toBinary(t)
-    def unpersist(manifest: String, p: Array[Byte]): T = {
+    def unpersist(manifest: Manifest, p: Array[Byte]): T = {
       if (canUnpersist(manifest)) fromBinary(p).asInstanceOf[T]
       else throw new IllegalArgumentException("")
     }

@@ -30,7 +30,7 @@ abstract class CodecBasedStaminaAkkaSerializer private[stamina] (persisters: Per
    */
   def fromBinary(bytes: Array[Byte], clazz: Option[Class[_]]): AnyRef = {
     val persisted = codec.readPersisted(bytes)
-    val manifest = Manifest.encode(persisted.key, persisted.version)
+    val manifest = Manifest(persisted.key, persisted.version)
 
     if (!persisters.canUnpersist(manifest)) throw UnsupportedDataException(persisted.key, persisted.version)
 

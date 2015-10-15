@@ -11,10 +11,10 @@ import scala.reflect.ClassTag
  */
 case class Persisters(persisters: List[Persister[_, _]]) {
   def canPersist(a: AnyRef): Boolean = persisters.exists(_.canPersist(a))
-  def canUnpersist(manifest: String): Boolean = persisters.exists(_.canUnpersist(manifest))
+  def canUnpersist(manifest: Manifest): Boolean = persisters.exists(_.canUnpersist(manifest))
 
   // format: OFF
-  def manifest(anyref: AnyRef): String = {
+  def manifest(anyref: AnyRef): Manifest = {
     persisters.find(_.canPersist(anyref))
               .map(_.currentManifest)
               .getOrElse(throw UnregisteredTypeException(anyref))
@@ -26,10 +26,10 @@ case class Persisters(persisters: List[Persister[_, _]]) {
               .getOrElse(throw UnregisteredTypeException(anyref))
   }
 
-  def unpersist(manifest: String, persisted: Array[Byte]): AnyRef = {
+  def unpersist(manifest: Manifest, persisted: Array[Byte]): AnyRef = {
     persisters.find(_.canUnpersist(manifest))
               .map(_.unpersistAny(manifest, persisted))
-              .getOrElse(throw UnsupportedDataException(Manifest.key(manifest), Manifest.version(manifest)))
+              .getOrElse(throw UnsupportedDataException(manifest.key, manifest.version))
   }
 
   def persistAndWrap(anyref: AnyRef): Persisted = {
@@ -39,10 +39,10 @@ case class Persisters(persisters: List[Persister[_, _]]) {
   }
 
   def unpersist(persisted: Persisted): AnyRef = {
-    val manifest = Manifest.encode(persisted.key, persisted.version)
+    val manifest = Manifest(persisted.key, persisted.version)
     persisters.find(_.canUnpersist(manifest))
               .map(_.unpersistAny(manifest, persisted.bytes.toArray))
-              .getOrElse(throw UnsupportedDataException(Manifest.key(manifest), Manifest.version(manifest)))
+              .getOrElse(throw UnsupportedDataException(manifest.key, manifest.version))
   }
   // format: ON
 

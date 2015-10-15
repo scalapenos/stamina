@@ -38,10 +38,11 @@ package stamina {
     extends RuntimeException(s"Error while trying to unpersist data with key '${persisted.key}' and version ${persisted.version}. Cause: ${error}")
     with NoStackTrace
 
-  // TODO this probably needs to change and move, just a PoC
+  case class Manifest(manifest: String) {
+    lazy val key: String = manifest.substring(manifest.indexOf('-') + 1)
+    lazy val version: Int = Integer.valueOf(manifest.substring(0, manifest.indexOf('-')))
+  }
   object Manifest {
-    def encode(key: String, version: Int): String = version + "-" + key
-    def key(manifest: String): String = manifest.substring(manifest.indexOf('-') + 1)
-    def version(manifest: String): Int = Integer.valueOf(manifest.substring(0, manifest.indexOf('-')))
+    def apply(key: String, version: Int): Manifest = Manifest(version + "-" + key)
   }
 }

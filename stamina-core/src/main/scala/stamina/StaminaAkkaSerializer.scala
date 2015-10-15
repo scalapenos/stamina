@@ -13,7 +13,7 @@ abstract class StaminaAkkaSerializer private[stamina] (persisters: Persisters) e
   val identifier = 490304
 
   def manifest(obj: AnyRef): String =
-    persisters.manifest(obj)
+    persisters.manifest(obj).manifest
 
   /**
    * @throws UnregisteredTypeException when the specified object is not supported by the persisters.
@@ -30,8 +30,9 @@ abstract class StaminaAkkaSerializer private[stamina] (persisters: Persisters) e
    */
   def fromBinary(bytes: Array[Byte], manifest: String): AnyRef = {
     if (manifest.isEmpty) throw new IllegalArgumentException("No manifest found")
-    if (!persisters.canUnpersist(manifest)) throw UnsupportedDataException(Manifest.key(manifest), Manifest.version(manifest))
+    val m = Manifest(manifest)
+    if (!persisters.canUnpersist(m)) throw UnsupportedDataException(m.key, m.version)
 
-    persisters.unpersist(manifest, bytes)
+    persisters.unpersist(m, bytes)
   }
 }
