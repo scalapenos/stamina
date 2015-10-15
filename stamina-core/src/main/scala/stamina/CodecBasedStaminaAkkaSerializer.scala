@@ -21,7 +21,7 @@ abstract class CodecBasedStaminaAkkaSerializer private[stamina] (persisters: Per
   def toBinary(obj: AnyRef): Array[Byte] = {
     if (!persisters.canPersist(obj)) throw UnregisteredTypeException(obj)
 
-    codec.writePersisted(persisters.persistAndWrap(obj))
+    codec.writePersisted(persisters.persist(obj))
   }
 
   /**

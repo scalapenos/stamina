@@ -34,8 +34,8 @@ class PersistersSpec extends StaminaSpec {
     }
 
     "correctly implement persist() and unpersist()" in {
-      unpersist(persistAndWrap(item1)) should equal(item1)
-      unpersist(persistAndWrap(cart)) should equal(cart)
+      unpersist(persist(item1)) should equal(item1)
+      unpersist(persist(cart)) should equal(cart)
     }
 
     "throw an UnregisteredTypeException when persisting an unregistered type" in {

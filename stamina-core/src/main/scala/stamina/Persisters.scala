@@ -20,9 +20,15 @@ case class Persisters(persisters: List[Persister[_, _]]) {
               .getOrElse(throw UnregisteredTypeException(anyref))
   }
 
-  def persist(anyref: AnyRef): Array[Byte] = {
+  def bytes(anyref: AnyRef): Array[Byte] = {
     persisters.find(_.canPersist(anyref))
               .map(_.persistAny(anyref))
+              .getOrElse(throw UnregisteredTypeException(anyref))
+  }
+
+  def persist(anyref: AnyRef): Persisted = {
+    persisters.find(_.canPersist(anyref))
+              .map(p => Persisted(p.key, p.currentVersion, p.persistAny(anyref)))
               .getOrElse(throw UnregisteredTypeException(anyref))
   }
 
@@ -30,12 +36,6 @@ case class Persisters(persisters: List[Persister[_, _]]) {
     persisters.find(_.canUnpersist(manifest))
               .map(_.unpersistAny(manifest, persisted))
               .getOrElse(throw UnsupportedDataException(manifest.key, manifest.version))
-  }
-
-  def persistAndWrap(anyref: AnyRef): Persisted = {
-    persisters.find(_.canPersist(anyref))
-              .map(p => Persisted(p.key, p.currentVersion, p.persistAny(anyref)))
-              .getOrElse(throw UnregisteredTypeException(anyref))
   }
 
   def unpersist(persisted: Persisted): AnyRef = {
