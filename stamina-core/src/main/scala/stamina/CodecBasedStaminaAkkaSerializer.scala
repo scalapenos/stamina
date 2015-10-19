@@ -3,7 +3,12 @@ package stamina
 import akka.serialization._
 
 /**
- * A custom Akka Serializer specifically designed for use with Akka Persistence.
+ * A custom Akka Serializer encoding key and version along with the serialized object.
+ *
+ * This is particularly useful when there is no separate field for metadata, such as when
+ * dealing with pre-akka-2.3 persistence.
+ *
+ * Wrapping/unwrapping the metadata around the serialized object is done by the Codec.
  */
 abstract class CodecBasedStaminaAkkaSerializer private[stamina] (persisters: Persisters, codec: PersistedCodec) extends Serializer {
   def this(persisters: List[Persister[_, _]], codec: PersistedCodec = DefaultPersistedCodec) = this(Persisters(persisters), codec)
