@@ -4,6 +4,8 @@ import akka.serialization._
 
 /**
  * A custom Akka Serializer specifically designed for use with Akka Persistence.
+ *
+ * Key and version information is encoded in the manifest.
  */
 abstract class StaminaAkkaSerializer private[stamina] (persisters: Persisters) extends SerializerWithStringManifest {
   def this(persisters: List[Persister[_, _]]) = this(Persisters(persisters))
