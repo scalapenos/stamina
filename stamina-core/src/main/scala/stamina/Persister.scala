@@ -34,10 +34,7 @@ abstract class Persister[T: ClassTag, V <: Version: VersionInfo](val key: String
   private[stamina] def unpersistAny(manifest: Manifest, persistedBytes: Array[Byte]): AnyRef = {
     Try(unpersist(manifest, persistedBytes).asInstanceOf[AnyRef]) match {
       case Success(anyref) ⇒ anyref
-      case Failure(error) ⇒
-        // TODO simplify
-        val persisted = Persisted(key, manifest.version, ByteString(persistedBytes))
-        throw UnrecoverableDataException(persisted, error)
+      case Failure(error)  ⇒ throw UnrecoverableDataException(manifest, error)
     }
   }
 }

@@ -34,8 +34,8 @@ package stamina {
     extends RuntimeException(s"No unpersister registered for key: '$key' and version: $version")
     with NoStackTrace
 
-  case class UnrecoverableDataException(persisted: Persisted, error: Throwable)
-    extends RuntimeException(s"Error while trying to unpersist data with key '${persisted.key}' and version ${persisted.version}. Cause: ${error}")
+  case class UnrecoverableDataException(manifest: Manifest, error: Throwable)
+    extends RuntimeException(s"Error while trying to unpersist data with key '${manifest.key}' and version ${manifest.version}. Cause: ${error}")
     with NoStackTrace
 
   case class Manifest(manifest: String) {
