@@ -23,7 +23,7 @@ abstract class StaminaAkkaSerializer private[stamina] (persisters: Persisters) e
   def toBinary(obj: AnyRef): Array[Byte] = {
     if (!persisters.canPersist(obj)) throw UnregisteredTypeException(obj)
 
-    persisters.bytes(obj)
+    persisters.persist(obj).bytes
   }
 
   /**
@@ -35,6 +35,6 @@ abstract class StaminaAkkaSerializer private[stamina] (persisters: Persisters) e
     val m = Manifest(manifest)
     if (!persisters.canUnpersist(m)) throw UnsupportedDataException(m.key, m.version)
 
-    persisters.unpersist(m, bytes)
+    persisters.unpersist(Persisted(m, bytes))
   }
 }
