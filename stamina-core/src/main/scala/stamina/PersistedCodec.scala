@@ -33,7 +33,7 @@ object DefaultPersistedCodec extends PersistedCodec {
       putInt(keyBytes.length).
       putBytes(keyBytes).
       putInt(persisted.version).
-      append(persisted.bytes).
+      append(ByteString(persisted.bytes)).
       result.
       toArray
   }

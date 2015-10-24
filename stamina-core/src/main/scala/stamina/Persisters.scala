@@ -14,28 +14,18 @@ case class Persisters(persisters: List[Persister[_, _]]) {
   def canUnpersist(manifest: Manifest): Boolean = persisters.exists(_.canUnpersist(manifest))
 
   // format: OFF
-  def manifest(anyref: AnyRef): Manifest = {
-    persisters.find(_.canPersist(anyref))
-              .map(_.currentManifest)
-              .getOrElse(throw UnregisteredTypeException(anyref))
-  }
+  private def persister[T <: AnyRef](anyref: T): Persister[T, _] =
+    persisters
+      .find(_.canPersist(anyref))
+      .map(_.asInstanceOf[Persister[T, _]])
+      .getOrElse(throw UnregisteredTypeException(anyref))
 
-  def bytes(anyref: AnyRef): Array[Byte] = {
-    persisters.find(_.canPersist(anyref))
-              .map(_.persistAny(anyref))
-              .getOrElse(throw UnregisteredTypeException(anyref))
-  }
+  def manifest(anyref: AnyRef): Manifest =
+    persister(anyref).currentManifest
 
   def persist(anyref: AnyRef): Persisted = {
-    persisters.find(_.canPersist(anyref))
-              .map(p => Persisted(p.key, p.currentVersion, p.persistAny(anyref)))
-              .getOrElse(throw UnregisteredTypeException(anyref))
-  }
-
-  def unpersist(manifest: Manifest, persisted: Array[Byte]): AnyRef = {
-    persisters.find(_.canUnpersist(manifest))
-              .map(_.unpersistAny(manifest, persisted))
-              .getOrElse(throw UnsupportedDataException(manifest.key, manifest.version))
+    val p = persister(anyref)
+    Persisted(p.currentManifest, p.persistAny(anyref))
   }
 
   def unpersist(persisted: Persisted): AnyRef = {
