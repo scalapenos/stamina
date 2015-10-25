@@ -45,7 +45,7 @@ trait StaminaTestKit { self: org.scalatest.WordSpecLike ⇒
       val serialized = persisters.persist(sample.persistable)
       byteStringFromResource(serialized.key, version, sample.sampleId) match {
         case Success(binary) ⇒
-          persisters.unpersist(Manifest(serialized.key, version), binary) should equal(sample.persistable)
+          persisters.unpersist(Persisted(Manifest(serialized.key, version), binary)) should equal(sample.persistable)
         case Failure(_: java.io.FileNotFoundException) if version == latestVersion ⇒
           val writtenToPath = saveByteArrayToTargetSerializationDirectory(serialized.bytes.toArray, serialized.key, version, sample.sampleId)
           fail(s"You appear to have added a new serialization sample to the stamina persisters' test.\n" +
