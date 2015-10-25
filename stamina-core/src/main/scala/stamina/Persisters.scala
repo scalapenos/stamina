@@ -28,10 +28,10 @@ case class Persisters(persisters: List[Persister[_, _]]) {
     Persisted(p.currentManifest, p.persistAny(anyref))
   }
 
-  def unpersist(persisted: Persisted): AnyRef = {
-    val manifest = Manifest(persisted.key, persisted.version)
+  def unpersist(persisted: Persisted): AnyRef = unpersist(persisted.bytes, persisted.manifest)
+  def unpersist(payload: Array[Byte], manifest: Manifest): AnyRef = {
     persisters.find(_.canUnpersist(manifest))
-              .map(_.unpersistAny(manifest, persisted.bytes.toArray))
+              .map(_.unpersistAny(manifest, payload))
               .getOrElse(throw UnsupportedDataException(manifest.key, manifest.version))
   }
   // format: ON
