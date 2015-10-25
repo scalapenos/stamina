@@ -1,4 +1,5 @@
 package stamina
+package codec
 
 /**
  * The encoding used to translate an instance of <code>Persisted</code>

@@ -44,17 +44,17 @@ class PersistersSpec extends StaminaSpec {
 
     "throw an UnsupportedDataException when unpersisting data with an unknown key" in {
       an[UnsupportedDataException] should
-        be thrownBy unpersist(Persisted("unknown", 1, ByteString("...")))
+        be thrownBy unpersist(Array[Byte](), Manifest("unknown", 1))
     }
 
     "throw an UnsupportedDataException when deserializing data with an unsupported version" in {
       an[UnsupportedDataException] should
-        be thrownBy unpersist(Persisted("item", 2, ByteString("...")))
+        be thrownBy unpersist(Array[Byte](), Manifest("item", 2))
     }
 
     "throw an UnrecoverableDataException when an exception occurs while deserializing" in {
       an[UnrecoverableDataException] should
-        be thrownBy unpersist(Persisted("item", 1, ByteString("not an item")))
+        be thrownBy unpersist(ByteString("not an item").toArray, itemPersister.currentManifest)
     }
   }
 }

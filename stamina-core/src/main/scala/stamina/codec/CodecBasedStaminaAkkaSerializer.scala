@@ -1,4 +1,5 @@
 package stamina
+package codec
 
 import akka.serialization._
 

@@ -25,22 +25,22 @@ class StaminaAkkaSerializerSpec extends StaminaSpec {
     }
 
     "throw an UnregisteredTypeException when serializing an unregistered type" in {
-      a[UnregisteredTypeException] should be thrownBy toBinary("a raw String is not supported", Manifest("foo", 32))
+      a[UnregisteredTypeException] should be thrownBy toBinary(ByteString("a raw String is not supported").toArray)
     }
 
     "throw an UnsupportedDataException when deserializing data with an unknown key" in {
       an[UnsupportedDataException] should
-        be thrownBy fromBinary(ByteString("...").toArray, Manifest("unknown", 1).manifest)
+        be thrownBy fromBinary(Array[Byte](), Manifest("unknown", 1).manifest)
     }
 
     "throw an UnsupportedDataException when deserializing data with an unsupported version" in {
       an[UnsupportedDataException] should
-        be thrownBy fromBinary(ByteString("...").toArray, Manifest("item", 2).manifest)
+        be thrownBy fromBinary(Array[Byte](), Manifest("item", 2).manifest)
     }
 
     "throw an UnrecoverableDataException when an exception occurs while deserializing" in {
       an[UnrecoverableDataException] should
-        be thrownBy fromBinary(ByteString("not an item").toArray, Manifest("item", 1).manifest)
+        be thrownBy fromBinary(ByteString("not an item").toArray, itemPersister.currentManifest.manifest)
     }
   }
 }
