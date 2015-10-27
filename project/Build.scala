@@ -4,17 +4,18 @@ import sbt.Keys._
 object Build extends Build {
   import Dependencies._
   import Formatting._
+  import Publishing._
 
   lazy val basicSettings = Seq(
     organization := "com.scalapenos",
-    version := "0.1.0",
+    version := "0.1.1-SNAPSHOT",
     scalaVersion := "2.11.7",
-    crossScalaVersions := Seq("2.11.7", "2.10.5"),
+    crossScalaVersions := Seq("2.11.7", "2.10.6"),
     crossVersion := CrossVersion.binary,
     incOptions := incOptions.value.withNameHashing(true),
     scalacOptions := Seq(
       "-encoding", "utf8",
-      "-target:jvm-1.7",
+      "-target:jvm-1.8",
       "-feature",
       "-unchecked",
       "-deprecation",
@@ -24,10 +25,11 @@ object Build extends Build {
     ) ++ versionSpecificScalacOptions(scalaVersion.value)
   )
 
-  lazy val libSettings = basicSettings ++ formattingSettings
+  lazy val libSettings = basicSettings ++ formattingSettings ++ publishingSettings
 
   lazy val root = Project("stamina", file("."))
     .settings(basicSettings: _*)
+    .settings(publishingSettings: _*)
     .aggregate(
       core,
       json,

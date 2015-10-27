@@ -1,12 +1,19 @@
-# Use container-based infrastructure
 sudo: false
 
 language: scala
 
 scala:
-- 2.11.6
+  - 2.11.7
 
 jdk:
-- oraclejdk8
+  - oraclejdk8
 
-script: "sbt ++$TRAVIS_SCALA_VERSION clean test"
+env:
+  global:
+    - secure: "c3gMioUuhU2iiqmV0jx+mig20j0Fu/MLy/h9OCDQfsMi1PqH1woNospBPhvwjQgTm1Wk7ciC8vmYfc9oHVw5rejjKMAgPTgft3NsTXBXoJ4B1RAWFAm5Fg6ERCwxBC+F61HOroye5QbMI5mhdUNp4rrT4e17VqHcNzyuUrolqdw="
+    - secure: "oGZioPdpRRO6ucL0E26h5wD2+Fyhnnb+l87c0C9KzHvGA+3sndf4ikO1YQ4bKw810VwjwL58BViHNk1IGUP/QKatSdEyETyHC/jqDp/6U73wmy7V7XWR0NBu90yOoOlV0/m69j4h/3jdD3PY0Fhcuh0l+4LIrOK4Oh93fJpl3sM="
+
+script: "sbt clean test"
+
+after_success:
+  - test $TRAVIS_PULL_REQUEST == "false" && test $TRAVIS_BRANCH == "master" && sbt publish
