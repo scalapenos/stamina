@@ -4,17 +4,18 @@ import sbt.Keys._
 object Build extends Build {
   import Dependencies._
   import Formatting._
+  import Publishing._
 
   lazy val basicSettings = Seq(
     organization := "com.scalapenos",
     version := "0.1.1-SNAPSHOT",
     scalaVersion := "2.11.7",
-    crossScalaVersions := Seq("2.11.7", "2.10.5"),
+    crossScalaVersions := Seq("2.11.7", "2.10.6"),
     crossVersion := CrossVersion.binary,
     incOptions := incOptions.value.withNameHashing(true),
     scalacOptions := Seq(
       "-encoding", "utf8",
-      "-target:jvm-1.7",
+      "-target:jvm-1.8",
       "-feature",
       "-unchecked",
       "-deprecation",
@@ -22,21 +23,6 @@ object Build extends Build {
       "-Xlint",
       "-Xlog-reflective-calls"
     ) ++ versionSpecificScalacOptions(scalaVersion.value)
-  )
-
-  lazy val publishingSettings = Seq(
-    publishTo := {
-      val nexus = "https://oss.sonatype.org/"
-      if (isSnapshot.value)
-        Some("snapshots" at nexus + "content/repositories/snapshots")
-      else
-        Some("releases"  at nexus + "service/local/staging/deploy/maven2")
-    },
-    credentials += Credentials(
-      "Sonatype Nexus Repository Manager",
-      "oss.sonatype.org",
-      sys.env("SONATYPE_USERNAME"),
-      sys.env("SONATYPE_PASSWORD"))
   )
 
   lazy val libSettings = basicSettings ++ formattingSettings ++ publishingSettings
