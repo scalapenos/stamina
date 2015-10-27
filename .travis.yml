@@ -1,18 +1,17 @@
-# Use container-based infrastructure
 sudo: false
 
 language: scala
 
 scala:
-- 2.11.6
+  - 2.11.7
 
 jdk:
-- oraclejdk8
+  - oraclejdk8
 
 env:
   global:
-    - SONATYPE_USERNAME=scalapenos
-    - secure: "TODO result of travis encrypt -r scalapenos/stamina SONATYPE_PASSWORD=password"
+    - SONATYPE_USERNAME=agemooij
+    - secure: "oGZioPdpRRO6ucL0E26h5wD2+Fyhnnb+l87c0C9KzHvGA+3sndf4ikO1YQ4bKw810VwjwL58BViHNk1IGUP/QKatSdEyETyHC/jqDp/6U73wmy7V7XWR0NBu90yOoOlV0/m69j4h/3jdD3PY0Fhcuh0l+4LIrOK4Oh93fJpl3sM="
 
 script: "sbt ++$TRAVIS_SCALA_VERSION clean test"
 
