@@ -7,7 +7,7 @@ object Build extends Build {
 
   lazy val basicSettings = Seq(
     organization := "com.scalapenos",
-    version := "0.1.0",
+    version := "0.1.1-SNAPSHOT",
     scalaVersion := "2.11.7",
     crossScalaVersions := Seq("2.11.7", "2.10.5"),
     crossVersion := CrossVersion.binary,
@@ -24,10 +24,26 @@ object Build extends Build {
     ) ++ versionSpecificScalacOptions(scalaVersion.value)
   )
 
-  lazy val libSettings = basicSettings ++ formattingSettings
+  lazy val publishingSettings = Seq(
+    publishTo := {
+      val nexus = "https://oss.sonatype.org/"
+      if (isSnapshot.value)
+        Some("snapshots" at nexus + "content/repositories/snapshots")
+      else
+        Some("releases"  at nexus + "service/local/staging/deploy/maven2")
+    },
+    credentials += Credentials(
+      "Sonatype Nexus Repository Manager",
+      "oss.sonatype.org",
+      sys.env("SONATYPE_USERNAME"),
+      sys.env("SONATYPE_PASSWORD"))
+  )
+
+  lazy val libSettings = basicSettings ++ formattingSettings ++ publishingSettings
 
   lazy val root = Project("stamina", file("."))
     .settings(basicSettings: _*)
+    .settings(publishingSettings: _*)
     .aggregate(
       core,
       json,

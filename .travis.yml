@@ -9,4 +9,11 @@ scala:
 jdk:
 - oraclejdk8
 
+env:
+  global:
+    - SONATYPE_USERNAME=scalapenos
+    - secure: "TODO result of travis encrypt -r scalapenos/stamina SONATYPE_PASSWORD=password"
+
 script: "sbt ++$TRAVIS_SCALA_VERSION clean test"
+
+after_success: "sbt publish"
