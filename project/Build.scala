@@ -10,8 +10,6 @@ object Build extends Build {
     organization := "com.scalapenos",
     version := "0.1.1-SNAPSHOT",
     scalaVersion := "2.11.7",
-    crossScalaVersions := Seq("2.11.7", "2.10.6"),
-    crossVersion := CrossVersion.binary,
     incOptions := incOptions.value.withNameHashing(true),
     scalacOptions := Seq(
       "-encoding", "utf8",
@@ -21,8 +19,10 @@ object Build extends Build {
       "-deprecation",
       "-language:_",
       "-Xlint",
-      "-Xlog-reflective-calls"
-    ) ++ versionSpecificScalacOptions(scalaVersion.value)
+      "-Xlog-reflective-calls",
+      "-Ywarn-unused",
+      "-Ywarn-unused-import"
+    )
   )
 
   lazy val libSettings = basicSettings ++ formattingSettings ++ publishingSettings
@@ -40,10 +40,8 @@ object Build extends Build {
     .settings(libSettings: _*)
     .settings(libraryDependencies ++=
       compile(
-        akkaActor,
-        scalaReflect(scalaVersion.value)
+        akkaActor
       ) ++
-      quasiQuotes(scalaVersion.value) ++
       test(
         scalatest
       )
@@ -57,9 +55,9 @@ object Build extends Build {
         sprayJson,
         jsonLenses
       ) ++
-      quasiQuotes(scalaVersion.value) ++
       test(
-        scalatest
+        scalatest,
+        sprayJsonShapeless
       )
     )
 
@@ -72,11 +70,4 @@ object Build extends Build {
         base64
       )
     )
-
-  private def versionSpecificScalacOptions(versionOfScala: String): Seq[String] = {
-    CrossVersion.partialVersion(versionOfScala) match {
-      case Some((major, minor)) if major >= 2 && minor >= 11 => Seq("-Ywarn-unused", "-Ywarn-unused-import")
-      case _ => Nil
-    }
-  }
 }
