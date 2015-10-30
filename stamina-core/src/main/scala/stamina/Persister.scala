@@ -15,7 +15,7 @@ abstract class Persister[T: ClassTag, V <: Version: VersionInfo](val key: String
   def unpersist(persisted: Persisted): T
 
   def canPersist(a: AnyRef): Boolean = convertToT(a).isDefined
-  def canUnpersist(p: Persisted): Boolean = p.key == key && p.version == currentVersion
+  def canUnpersist(p: Persisted): Boolean = p.key == key && p.version <= currentVersion
 
   private[stamina] def convertToT(any: AnyRef): Option[T] = any match {
     case t: T ⇒ Some(t)
