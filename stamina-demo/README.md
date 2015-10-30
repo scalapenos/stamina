@@ -91,6 +91,7 @@ class ChatRoom extends PersistentActor {
     case UserLimitSet(limit) => limit = Some(limit)
   }
 }
+```
 
 ## Step 4
 
