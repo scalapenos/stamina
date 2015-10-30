@@ -11,6 +11,11 @@ The first step would be to depend on the stamina library and configure
 ```scala
   case class Message(text: String, from: String)
 
+  object ChatRoom {
+    def props = Props(new ChatRoom)
+    val name = "chatroom"
+  }
+
   class ChatRoom extends PersistentActor {
     sealed trait Command
     case class Join extends Command
@@ -25,7 +30,7 @@ The first step would be to depend on the stamina library and configure
 
     def receiveCommand: Receive = {
       case Join =>
-        users + sender()
+        users = users + sender()
         sender() ! Joined(messages)
       case SendMessage(text, from) =>
         persist(MessageSent(text, from)) { event =>
@@ -39,7 +44,7 @@ The first step would be to depend on the stamina library and configure
 
     private def updateState(event: Event) = event match {
       case MessageSent(msg) => 
-        messages +: msg
+        messages = messages +: msg
         users.foreach(_ ! msg)
     }
   } 
@@ -48,12 +53,12 @@ The first step would be to depend on the stamina library and configure
 
 ## Step 2 - Extend sender information
 
-So far we only know the name of the sender of a message. Let's say we want to add more information about the sender, e.g. the location from which he sent the message and the device that was used. To incorporate this information we construct a new case class `Sender` and adapt the ``Message` to use it. 
+So far we only know the name of the sender of a message. Let's say we want to add more information about the message, e.g. the time it was sent, the location of the sender at the time of sending and the device that was used. To incorporate this information we construct a new case class `Sender` and adapt the ``Message` to use it. 
 
 ```scala
 case class Sender(name: String, location: String, device: String)
 
-case class Message(text: String, sender: Sender)
+case class Message(text: String, timestamp: DateTime, sender: Sender)
 ```
 
 Notice also that we renamed the attribute `from` to `sender`.
