@@ -11,9 +11,9 @@ We are still finishing up the last open ends before we release a public version 
 
 
 ## Current status
-[stamina-core](stamina-core) and [stamina-json](stamina-json) are pretty much ready for a first beta release and we are happy wth the API that has evolved out of the many experiments we have done over the last year.
+[stamina-core](stamina-core) and [stamina-json](stamina-json) are pretty much ready for a first beta release and we are happy with the API that has evolved out of the many experiments we have done over the last year.
 
-[stamina-testkit](stamina-testkit) is also mostly finished. It can be used to generate scalatest tests for your stamina persisters, keeping serialized older versions of your data around to make sure you don't accidentily break compatibility.
+[stamina-testkit](stamina-testkit) is also mostly finished. It can be used to generate scalatest tests for your stamina persisters, keeping serialized older versions of your data around to make sure you don't accidentally break compatibility.
 
 Our final task before releasing a public beta is to create a *stamina-sample-app* to show Stamina in action on a representative project.
 
