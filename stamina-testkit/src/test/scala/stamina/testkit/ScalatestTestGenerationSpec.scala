@@ -11,7 +11,7 @@ class ScalatestTestGenerationSpec extends StaminaTestKitSpec {
 
   import TestDomain._
 
-  case class ItemPersister(override val key: String) extends Persister[Item, V1](key) {
+  case class ItemPersister(override val key: String) extends Persister[Item, Array[Byte], V1](key) {
     def persist(t: Item): Array[Byte] = Array[Byte]()
     def unpersist(manifest: Manifest, p: Array[Byte]): Item = item1
   }

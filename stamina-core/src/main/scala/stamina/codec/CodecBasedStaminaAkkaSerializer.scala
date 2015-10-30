@@ -11,9 +11,9 @@ import akka.serialization._
  *
  * Wrapping/unwrapping the metadata around the serialized object is done by the Codec.
  */
-abstract class CodecBasedStaminaAkkaSerializer private[stamina] (persisters: Persisters, codec: PersistedCodec) extends Serializer {
-  def this(persisters: List[Persister[_, _]], codec: PersistedCodec = DefaultPersistedCodec) = this(Persisters(persisters), codec)
-  def this(persister: Persister[_, _], persisters: Persister[_, _]*) = this(Persisters(persister :: persisters.toList), DefaultPersistedCodec)
+abstract class CodecBasedStaminaAkkaSerializer private[stamina] (persisters: Persisters[Array[Byte]], codec: PersistedCodec[Array[Byte]]) extends Serializer {
+  def this(persisters: List[Persister[_, Array[Byte], _]], codec: PersistedCodec[Array[Byte]] = DefaultPersistedCodec) = this(Persisters(persisters), codec)
+  def this(persister: Persister[_, Array[Byte], _], persisters: Persister[_, Array[Byte], _]*) = this(Persisters(persister :: persisters.toList), DefaultPersistedCodec)
 
   /** We don't need class manifests since we're using keys to identify types. */
   val includeManifest: Boolean = false

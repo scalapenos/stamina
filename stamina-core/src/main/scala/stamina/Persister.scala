@@ -8,12 +8,12 @@ import scala.util._
  * at version V and unpersisting persisted instances of T for all versions up
  * to and including version V.
  */
-abstract class Persister[T: ClassTag, V <: Version: VersionInfo](val key: String) {
+abstract class Persister[T: ClassTag, P <: AnyRef, V <: Version: VersionInfo](val key: String) {
   lazy val currentVersion = Version.numberFor[V]
 
   lazy val currentManifest = Manifest(key, currentVersion)
-  def persist(t: T): Array[Byte]
-  def unpersist(manifest: Manifest, persisted: Array[Byte]): T
+  def persist(t: T): P
+  def unpersist(manifest: Manifest, persisted: P): T
 
   def canPersist(a: AnyRef): Boolean = convertToT(a).isDefined
   def canUnpersist(m: Manifest): Boolean = m.key == key && m.version <= currentVersion
@@ -23,7 +23,7 @@ abstract class Persister[T: ClassTag, V <: Version: VersionInfo](val key: String
     case _    ⇒ None
   }
 
-  private[stamina] def persistAny(any: AnyRef): Array[Byte] = {
+  private[stamina] def persistAny(any: AnyRef): P = {
     convertToT(any).map(persist(_)).getOrElse(
       throw new IllegalArgumentException(
         s"persistAny() was called on Persister[${implicitly[ClassTag[T]].runtimeClass}] with an instance of ${any.getClass}."
@@ -31,8 +31,8 @@ abstract class Persister[T: ClassTag, V <: Version: VersionInfo](val key: String
     )
   }
 
-  private[stamina] def unpersistAny(manifest: Manifest, persistedBytes: Array[Byte]): AnyRef = {
-    Try(unpersist(manifest, persistedBytes).asInstanceOf[AnyRef]) match {
+  private[stamina] def unpersistAny(manifest: Manifest, persisted: AnyRef): AnyRef = {
+    Try(unpersist(manifest, persisted.asInstanceOf[P]).asInstanceOf[AnyRef]) match {
       case Success(anyref) ⇒ anyref
       case Failure(error)  ⇒ throw UnrecoverableDataException(manifest, error)
     }

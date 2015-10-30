@@ -66,7 +66,7 @@ package json {
   /**
    * Simple abstract marker superclass to unify (and hide) the two internal Persister implementations.
    */
-  sealed abstract class JsonPersister[T: RootJsonFormat: ClassTag, V <: Version: VersionInfo](key: String) extends Persister[T, V](key) {
+  sealed abstract class JsonPersister[T: RootJsonFormat: ClassTag, V <: Version: VersionInfo](key: String) extends Persister[T, Array[Byte], V](key) {
     private[json] def cannotUnpersist(manifest: Manifest) =
       s"""JsonPersister[${implicitly[ClassTag[T]].runtimeClass.getSimpleName}, V${currentVersion}](key = "${key}") cannot unpersist data with manifest "$manifest"."""
   }

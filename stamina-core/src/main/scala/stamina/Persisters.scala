@@ -9,37 +9,37 @@ import scala.reflect.ClassTag
  * one single entry-point for subclasses of <code>StaminaAkkaSerializer</code>
  *
  */
-case class Persisters(persisters: List[Persister[_, _]]) {
+case class Persisters[P <: AnyRef](persisters: List[Persister[_, P, _]]) {
   def canPersist(a: AnyRef): Boolean = persisters.exists(_.canPersist(a))
   def canUnpersist(manifest: Manifest): Boolean = persisters.exists(_.canUnpersist(manifest))
 
   // format: OFF
-  private def persister[T <: AnyRef](anyref: T): Persister[T, _] =
+  private def persister[T <: AnyRef](anyref: T): Persister[T, P, _] =
     persisters
       .find(_.canPersist(anyref))
-      .map(_.asInstanceOf[Persister[T, _]])
+      .map(_.asInstanceOf[Persister[T, P, _]])
       .getOrElse(throw UnregisteredTypeException(anyref))
 
   def manifest(anyref: AnyRef): Manifest =
     persister(anyref).currentManifest
 
-  def persist(anyref: AnyRef): Persisted = {
+  def persist(anyref: AnyRef): Persisted[P] = {
     val p = persister(anyref)
     Persisted(p.currentManifest, p.persistAny(anyref))
   }
 
-  def unpersist(persisted: Persisted): AnyRef = unpersist(persisted.bytes, persisted.manifest)
-  def unpersist(payload: Array[Byte], manifest: Manifest): AnyRef = {
+  def unpersist(persisted: Persisted[P]): AnyRef = unpersist(persisted.persisted, persisted.manifest)
+  def unpersist(persisted: AnyRef, manifest: Manifest): AnyRef = {
     persisters.find(_.canUnpersist(manifest))
-              .map(_.unpersistAny(manifest, payload))
+              .map(_.unpersistAny(manifest, persisted))
               .getOrElse(throw UnsupportedDataException(manifest.key, manifest.version))
   }
   // format: ON
 
-  def ++(other: Persisters): Persisters = Persisters(persisters ++ other.persisters)
+  def ++(other: Persisters[P]): Persisters[P] = Persisters(persisters ++ other.persisters)
 }
 
 object Persisters {
-  def apply[T: ClassTag, V <: Version: VersionInfo](persister: Persister[T, V]): Persisters = apply(List(persister))
-  def apply(first: Persister[_, _], rest: Persister[_, _]*): Persisters = apply(first :: rest.toList)
+  def apply[T: ClassTag, P <: AnyRef, V <: Version: VersionInfo](persister: Persister[T, P, V]): Persisters[P] = apply(List(persister))
+  def apply[P <: AnyRef](first: Persister[_, P, _], rest: Persister[_, P, _]*): Persisters[P] = apply(first :: rest.toList)
 }

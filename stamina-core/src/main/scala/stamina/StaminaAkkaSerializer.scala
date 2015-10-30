@@ -7,9 +7,9 @@ import akka.serialization._
  *
  * Key and version information is encoded in the manifest.
  */
-abstract class StaminaAkkaSerializer private[stamina] (persisters: Persisters) extends SerializerWithStringManifest {
-  def this(persisters: List[Persister[_, _]]) = this(Persisters(persisters))
-  def this(persister: Persister[_, _], persisters: Persister[_, _]*) = this(Persisters(persister :: persisters.toList))
+abstract class StaminaAkkaSerializer private[stamina] (persisters: Persisters[Array[Byte]]) extends SerializerWithStringManifest {
+  def this(persisters: List[Persister[_, Array[Byte], _]]) = this(Persisters(persisters))
+  def this(persister: Persister[_, Array[Byte], _], persisters: Persister[_, Array[Byte], _]*) = this(Persisters(persister :: persisters.toList))
 
   /** Uniquely identifies this Serializer. */
   val identifier = 490304
@@ -23,7 +23,7 @@ abstract class StaminaAkkaSerializer private[stamina] (persisters: Persisters) e
   def toBinary(obj: AnyRef): Array[Byte] = {
     if (!persisters.canPersist(obj)) throw UnregisteredTypeException(obj)
 
-    persisters.persist(obj).bytes
+    persisters.persist(obj).persisted
   }
 
   /**
