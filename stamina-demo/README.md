@@ -63,9 +63,36 @@ case class Message(text: String, timestamp: DateTime, sender: Sender)
 
 Notice also that we renamed the attribute `from` to `sender`.
 
-## Step 2 - Multi chatroom
+## Step 3 - Limit the amount of users in the chatroom
 
-## Step 3 - List of chatroom
+Chatting with too many users can be chaotic. Therefore we want to limit the amount of users that are allowed at one time in the chatroom. This limit can be set by sending a `SetUserLimit` to the `ChatRoom`.
+
+```scala
+class ChatRoom extends PersistentActor {
+  ...
+  case class SetUserLimit(limit: Int) extends Command
+
+  case class UserLimitSet(limit: Int) extends Event
+
+  var limit: Option[Int] = None
+
+  def receiveCommand: Receive = {
+    case Join if limit.fold(false)(_ == limit) =>
+      sender() ! UserLimitReached
+    case SetUserLimit(limit) =>
+      persist(UserLimitSet(limit)) { event =>
+        updateState(event)
+      }
+    ...
+  }
+
+  private def updateState(event: Event) = event match {
+    ...
+    case UserLimitSet(limit) => limit = Some(limit)
+  }
+}
+
+## Step 4
 
 ## Step 3 - Accounts and their properties
 
