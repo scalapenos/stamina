@@ -77,7 +77,7 @@ class ChatRoom extends PersistentActor {
   var limit: Option[Int] = None
 
   def receiveCommand: Receive = {
-    case Join if limit.fold(false)(_ == limit) =>
+    case Join if limit.fold(false)(_ == users.size) =>
       sender() ! UserLimitReached
     case SetUserLimit(limit) =>
       persist(UserLimitSet(limit)) { event =>
