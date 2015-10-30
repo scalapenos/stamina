@@ -4,7 +4,11 @@ package eventadapters
 import akka.persistence.journal._
 
 /**
- * EventAdapter that uses Stamina to convert events.
+ * EventAdapter that uses Stamina to convert events and perform schema
+ * evolution when reading from the journal..
+ *
+ * Remember to configure akka-serialization to correctly serialize objects
+ * of type P (unless it's treated specially by your journal plugin).
  */
 class StaminaEventAdapter[P <: AnyRef](persisters: Persisters[P]) extends EventAdapter {
   def this(persisters: List[Persister[_, P, _]]) = this(Persisters(persisters))
