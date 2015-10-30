@@ -40,7 +40,8 @@ object Build extends Build {
     .settings(libSettings: _*)
     .settings(libraryDependencies ++=
       compile(
-        akkaActor
+        akkaActor,
+        akkaPersistence
       ) ++
       test(
         scalatest
