@@ -1,4 +1,4 @@
-![Version](https://img.shields.io/badge/version-0.1.1-SNAPSHOT-orange.svg?style=flat "0.1.1-SNAPSHOT") [![Build Status](https://img.shields.io/travis/scalapenos/stamina.svg?style=flat)](https://travis-ci.org/scalapenos/stamina) ![License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat "MIT")
+![Version](https://img.shields.io/badge/version-SNAPSHOT-orange.svg?style=flat "0.1.1-SNAPSHOT") [![Build Status](https://img.shields.io/travis/scalapenos/stamina.svg?style=flat)](https://travis-ci.org/scalapenos/stamina) ![License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat "MIT")
 
 Stamina is an Akka serialization toolkit written specifically for use with Akka Persistence.
 It has a strong focus on long-term viability of your persisted data so it provides support for **versioning** that data, **auto-migrating** that data at read time to be compatible with your current event and domain classes, and a **testkit** to make sure all older versions of your persisted data are still readable.
