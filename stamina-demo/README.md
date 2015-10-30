@@ -95,7 +95,9 @@ class ChatRoom extends PersistentActor {
 
 ## Step 4 More fine grained limits and exceptions
 
-The user limit feature is working great, but the administrator responsible for setting the limit notices that there is a pattern to the limit changes he is setting for the chatroom. During the week there is a group of people who use the chatroom for *serious business* and ask the administrator to allow a maximum number of 5 people at the same time in the room. However, during the weekend a larger group of users would like to use the same chatroom and the administrator again increases the limit to 20. To automate this pattern the limit feature is extended to distinguish between a week and a weekend limit. Also, some users have special privilges and are always allowed in the room, even if the user limit is reached. To achieve these changes the `SetUserLimit` event is extended and renamed to a more general `SetConfiguration` case class
+The user limit feature is working great, but the administrator responsible for setting the limit notices that there is a pattern to the limit changes he is setting for the chatroom. During the week there is a group of people who use the chatroom for *serious business* and ask the administrator to allow a maximum number of 5 people in the room. However, during the weekend a larger group of users would like to use the same chatroom and the administrator again increases the limit to 20. 
+
+To automate this pattern the limit feature is extended to distinguish between a week and a weekend limit. Also, some users have special privileges and are always allowed in the room, even if the user limit is reached. To achieve these changes the `SetUserLimit` event is extended and renamed to a more general `SetConfiguration` case class. Last, in the previous version there would always be a limit once one was set. By using an `Option[Int]` in the command and corresponding event, we allow the removal of a maximum number of users in the chatroom.
 
 ```scala
 case class SetConfiguration(weekLimit: Option[Int], weekendLimit: Option[Int], privilegedUsers: Set[String])
