@@ -17,6 +17,19 @@ We are still finishing up the last open ends before we release a public version 
 
 Our final task before releasing a public beta is to create a *stamina-sample-app* to show Stamina in action on a representative project.
 
+## Adding Stamina to your project
+To add stamina to your project, use snapshot releases available via
+[Maven Central](https://oss.sonatype.org/content/repositories/snapshots/com/scalapenos/). To do to this add the 
+following lines to the build file: 
+```scala
+resolvers ++= Seq(
+  "Sonatype Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots/"
+)
+
+libraryDependencies ++= Seq(
+  "com.scalapenos" %% "stamina-json" % "0.1.1-SNAPSHOT"
+)
+```
 
 # Stamina in Detail
 Stamina is an Akka serialization toolkit written specifically for use with Akka Persistence. Its main defining characteristics are:
