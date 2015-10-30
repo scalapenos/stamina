@@ -36,9 +36,9 @@ The first (and currently only) implementation is based on spray-json. It support
 //
 // Normally, of course, you would only need one case class,
 // which would always represent the current version (V3 in this case).
-import stamina.json._
-import stamina.json.SprayJsonMacros._
+import fommil.sjs.FamilyFormats._
 import spray.json.lenses.JsonLenses._
+import stamina.json._
 
 // spray-json persister for V1.
 // Essentially equivalent to any existing Akka serializer except
