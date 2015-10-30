@@ -76,6 +76,26 @@ val v3CartCreatedPersister = persister[CartCreatedV3, V3](
 )
 ```
 
+To use persisters, they need to be encapsulated in a `StaminaAkkaSerializer` that is registered, in the 
+application.conf, for the event classes that need to be persisted. Here the provided `Persistable` marker trait is used
+and the serializer is registered for `Persistable` classes.
+
+```scala
+class CartCreatedV3(...) extends Persistable
+class CartSerializer extends StaminaAkkaSerializer(v3CartCreatedPersister, ...)
+```
+
+```
+akka.actor {
+  serializers {
+    serializer  = "package.name.CartSerializer"
+  }
+  serialization-bindings {
+    "stamina.Persistable" = serializer
+  }
+}
+```
+
 An example application and a testkit with support for regression
 testing of serialized older versions are currently being worked on.
 
