@@ -21,5 +21,5 @@ class StaminaEventAdapter[P <: AnyRef](persisters: Persisters[P]) extends EventA
     EventSeq(persisters.unpersist(event.asInstanceOf[AnyRef], Manifest(manifest)))
 
   def toJournal(event: Any) =
-    persisters.persist(event.asInstanceOf[AnyRef])
+    persisters.persist(event.asInstanceOf[AnyRef]).persisted
 }
