@@ -55,12 +55,12 @@ package object json {
    */
   def persister[T: RootJsonFormat: ClassTag, V <: Version: VersionInfo: MigratableVersion](key: String, migrator: JsonMigrator[V]): JsonPersister[T, V] = new VnJsonPersister[T, V](key, migrator)
 
-  def toByteArrayPersister[T: RootJsonFormat: ClassTag, V <: Version: VersionInfo](persister: Persister[T, JsValue, V]): Persister[T, Array[Byte], V] = new Persister[T, Array[Byte], V](persister.key) {
+  def toByteArrayPersister[T: ClassTag, V <: Version: VersionInfo](persister: Persister[T, JsValue, V]): Persister[T, Array[Byte], V] = new Persister[T, Array[Byte], V](persister.key) {
     def persist(t: T): Array[Byte] = persister.persist(t).compactPrint.getBytes(UTF_8)
     def unpersist(manifest: Manifest, persisted: Array[Byte]) = persister.unpersist(manifest, JsonParser(ParserInput(persisted)))
   }
 
-  def toByteArrayPersisters[T: RootJsonFormat: ClassTag, V <: Version: VersionInfo](persisters: List[Persister[T, JsValue, V]]): Persisters[Array[Byte]] =
+  def toByteArrayPersisters[T: ClassTag, V <: Version: VersionInfo](persisters: List[Persister[T, JsValue, V]]): Persisters[Array[Byte]] =
     new Persisters[Array[Byte]](persisters.map(toByteArrayPersister(_)))
 
   import java.nio.charset.StandardCharsets
