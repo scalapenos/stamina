@@ -18,6 +18,14 @@ abstract class Persister[T: ClassTag, P <: AnyRef, V <: Version: VersionInfo](va
   def canPersist(a: AnyRef): Boolean = convertToT(a).isDefined
   def canUnpersist(m: Manifest): Boolean = m.key == key && m.version <= currentVersion
 
+  def translate[U <: AnyRef](p: P => U, u: U => P): Persister[T, U, V] = {
+    val original = this
+    new Persister[T, U, V](key) {
+      override def persist(t: T): U = p(original.persist(t))
+      override def unpersist(manifest: Manifest, persisted: U): T = original.unpersist(manifest, u(persisted))
+    }
+  }
+
   private[stamina] def convertToT(any: AnyRef): Option[T] = any match {
     case t: T ⇒ Some(t)
     case _    ⇒ None

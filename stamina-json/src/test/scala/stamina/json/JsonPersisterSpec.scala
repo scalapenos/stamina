@@ -66,7 +66,7 @@ class JsonPersisterSpec extends StaminaJsonSpec
     val persisters = Persisters(List(
       persister[CartCreatedV3]("cart-created"),
       persister[CheckoutStarted]("checkout-started")
-    ))
+    ).map(toByteArrayPersister(_)))
 
     persisters.generateTestsFor(
       sample(v3CartCreated),
