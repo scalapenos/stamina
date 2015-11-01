@@ -49,6 +49,7 @@ object Build extends Build {
 
   lazy val json = Project("stamina-json", file("stamina-json"))
     .dependsOn(core)
+    .dependsOn(testkit % "test")
     .settings(libSettings: _*)
     .settings(libraryDependencies ++=
       compile(

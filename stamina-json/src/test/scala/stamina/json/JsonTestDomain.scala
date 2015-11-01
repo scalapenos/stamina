@@ -41,5 +41,10 @@ object JsonTestDomain {
   val v3Item1 = ItemV3(1, "Wonka Bar", 500)
   val v3Item2 = ItemV3(2, "Everlasting Gobstopper", 489)
   val v3Cart = CartV3(1, List(v3Item1, v3Item2))
-  val v3CartCreated = CartCreatedV3(v3Cart, System.currentTimeMillis)
+  val v3CartCreated = CartCreatedV3(v3Cart, 1446377199943l)
+
+  // Others
+
+  case class CheckoutStarted(paymentMethod: String)
+  val checkoutStarted = CheckoutStarted("maestro")
 }

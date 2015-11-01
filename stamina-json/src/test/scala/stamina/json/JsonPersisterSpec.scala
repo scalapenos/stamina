@@ -1,7 +1,10 @@
 package stamina
 package json
 
-class JsonPersisterSpec extends StaminaJsonSpec {
+import stamina.testkit._
+
+class JsonPersisterSpec extends StaminaJsonSpec
+    with StaminaTestKit {
   import JsonTestDomain._
   import spray.json.lenses.JsonLenses._
   import fommil.sjs.FamilyFormats._
@@ -55,5 +58,18 @@ class JsonPersisterSpec extends StaminaJsonSpec {
       v1Unpersisted.cart.items.map(_.price).toSet should equal(Set(1000))
       v2Unpersisted.timestamp should (be > 0L and be < System.currentTimeMillis)
     }
+  }
+
+  "a persister based on stamina-json and spray-json-shapeless" should {
+    import fommil.sjs.FamilyFormats._
+
+    val persisters = Persisters(List(
+      persister[CartCreatedV3]("cart-created"),
+      persister[CheckoutStarted]("checkout-started")
+    ))
+
+    persisters.generateTestsFor(
+      sample(v3CartCreated),
+      sample(checkoutStarted))
   }
 }
