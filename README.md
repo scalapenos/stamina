@@ -1,4 +1,4 @@
-![Version](https://img.shields.io/badge/version-unreleased-orange.svg?style=flat "unreleased") [![Build Status](https://img.shields.io/travis/scalapenos/stamina.svg?style=flat)](https://travis-ci.org/scalapenos/stamina) ![License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat "MIT")
+![Version](https://img.shields.io/badge/version-SNAPSHOT-orange.svg?style=flat "0.1.1-SNAPSHOT") [![Build Status](https://img.shields.io/travis/scalapenos/stamina.svg?style=flat)](https://travis-ci.org/scalapenos/stamina) ![License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat "MIT")
 
 Stamina is an Akka serialization toolkit written specifically for use with Akka Persistence.
 It has a strong focus on long-term viability of your persisted data so it provides support for **versioning** that data, **auto-migrating** that data at read time to be compatible with your current event and domain classes, and a **testkit** to make sure all older versions of your persisted data are still readable.
@@ -11,7 +11,17 @@ We are still finishing up the last open ends before we release a public version 
 
 
 ## Current status
-[stamina-core](stamina-core) and [stamina-json](stamina-json) are pretty much ready for a first beta release and we are happy with the API that has evolved out of the many experiments we have done over the last year.
+Stamina is currently available in pre-release SNAPSHOT form. This means that we don't recommend using Stamina in production since the APIs could still change significantly and break your stuff.
+
+To use the latest SNAPSHOT release, configure your SBT build like this:
+
+```
+resolvers += "Sonatype Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots/"
+
+libraryDependencies += "com.scalapenos" %% "stamina-json" % "0.1.1-SNAPSHOT"
+```
+
+[stamina-core](stamina-core) and [stamina-json](stamina-json) are pretty much ready and we are happy with the API that has evolved out of the many experiments we have done over the last year. We **are** looking at the new Akka 2.4.x event adapters to see whether integration with akka can be improved using them.
 
 [stamina-testkit](stamina-testkit) is also mostly finished. It can be used to generate scalatest tests for your stamina persisters, keeping serialized older versions of your data around to make sure you don't accidentally break compatibility.
 
