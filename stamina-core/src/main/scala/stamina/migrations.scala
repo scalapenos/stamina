@@ -26,7 +26,7 @@ package object migrations {
    * creating Migrator[T, V2], etc. Its migration will be the identity
    * function so calling its migrate function will not have any effect.
    */
-  def from[T, V <: V1: VersionInfo]: Migrator[T, V] = new Migrator[T, V](Map(Version.numberFor[V] -> identityMigration[T]))
+  def from[T, V <: V1: VersionInfo]: Migrator[T, V] = new Migrator[T, V](Map(Version.numberFor[V] → identityMigration[T]))
 }
 
 package migrations {
@@ -68,7 +68,7 @@ package migrations {
 
     def to[NextV <: Version: VersionInfo](migration: Migration[R])(implicit isNextAfter: IsNextVersionAfter[NextV, V]) = {
       new Migrator[R, NextV](
-        migrations.mapValues(_ && migration) + (Version.numberFor[NextV] -> identityMigration[R])
+        migrations.mapValues(_ && migration) + (Version.numberFor[NextV] → identityMigration[R])
       )
     }
   }
