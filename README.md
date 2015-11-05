@@ -19,8 +19,8 @@ Our final task before releasing a public beta is to create a *stamina-sample-app
 
 ## Adding Stamina to your project
 To add stamina to your project, use snapshot releases available via
-[Maven Central](https://oss.sonatype.org/content/repositories/snapshots/com/scalapenos/). To do to this add the 
-following lines to the build file: 
+[Maven Central](https://oss.sonatype.org/content/repositories/snapshots/com/scalapenos/). Add the 
+following lines to your SBT build: 
 ```scala
 resolvers ++= Seq(
   "Sonatype Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots/"
@@ -49,8 +49,8 @@ The first (and currently only) implementation is based on spray-json. It support
 //
 // Normally, of course, you would only need one case class,
 // which would always represent the current version (V3 in this case).
-import fommil.sjs.FamilyFormats._
-import spray.json.lenses.JsonLenses._
+import fommil.sjs.FamilyFormats._ // For this example's ease, auto-generated json formats are used here
+import spray.json.lenses.JsonLenses._ 
 import stamina.json._
 
 // spray-json persister for V1.
@@ -76,13 +76,20 @@ val v3CartCreatedPersister = persister[CartCreatedV3, V3](
 )
 ```
 
-To use persisters, they need to be encapsulated in a `StaminaAkkaSerializer` that is registered, in the 
-application.conf, for the event classes that need to be persisted. Here the provided `Persistable` marker trait is used
-and the serializer is registered for `Persistable` classes.
+For these persisters to be actually used by the Akka serialization system, you will need to bundle them into an Akka 
+serializer and then register that serializer for your classes. To make that registration process a little simpler 
+Stamina comes with a marker trait called `Persistable`. Of course you can use your own marker traits instead.
 
 ```scala
 class CartCreatedV3(...) extends Persistable
-class CartSerializer extends StaminaAkkaSerializer(v3CartCreatedPersister, ...)
+```
+
+In the example below we create a subclass of `StaminaAkkaSerializer` and pass all our Persister instances into it. We 
+then register this serializer with Akka in our application.conf and bind it to all instances/subclasses of the 
+`Persistable` marker trait.
+
+```scala
+class WebshopSerializer extends StaminaAkkaSerializer(v3CartCreatedPersister, ...)
 ```
 
 ```
