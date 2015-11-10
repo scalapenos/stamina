@@ -51,6 +51,12 @@ The first step would be to depend on the stamina library and configure
 
 ```
 
+The following persisters are to be defined
+
+```scala
+val v1MessageSent = persister[MessageSent]("message-sent")
+```
+
 ## Step 2 - Extend sender information
 
 So far we only know the name of the sender of a message. Let's say we want to add more information about the message, e.g. the time it was sent and the location of the sender at the time of sending. To incorporate this information we construct a new case class `Sender` and adapt the ``Message` to use it. 
@@ -61,7 +67,17 @@ case class Sender(name: String, location: String)
 case class Message(text: String, timestamp: DateTime, sender: Sender)
 ```
 
-Notice also that we renamed the attribute `from` to `sender`.
+Notice also that we renamed the attribute `from` to `sender`. The following persisters are to be defined:
+
+```scala
+val v2MessageSent = persister[MessageSent,V2]("message-sent",
+  from[V1].to[V2]{json => 
+    val from = json.extract[String](`from)
+    json.update(`timestamp ! set[String]("2015-01-01 00:00:00"))
+        .update(`sender / `from ! set[String](from))
+        .update(`sender / `location ! set[String]("unknown"))
+  })
+```
 
 ## Step 3 - Limit the amount of users in the chatroom
 
@@ -92,6 +108,12 @@ class ChatRoom extends PersistentActor {
     ...
   }
 }
+```
+
+The following persisters are to be defined:
+
+```scala
+val v1SetUserLimit = persister[UserLimitSet]("user-limit")
 ```
 
 ## Step 4 Privileged users
@@ -127,6 +149,13 @@ class ChatRoom extends PersistentActor {
     ...
   }
 }
+```
+
+The following persisters are to be defined:
+
+```scala
+val v2ConfigurationSet = persister[ConfigurationSet,V2]("user-limit", 
+   from[V1].to[V2](_.update(`privilegedUsers ! set[List[String]](List.empty)))
 ```
 
 ## Step 5 - ....
