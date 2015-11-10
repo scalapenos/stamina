@@ -53,10 +53,10 @@ The first step would be to depend on the stamina library and configure
 
 ## Step 2 - Extend sender information
 
-So far we only know the name of the sender of a message. Let's say we want to add more information about the message, e.g. the time it was sent, the location of the sender at the time of sending and the device that was used. To incorporate this information we construct a new case class `Sender` and adapt the ``Message` to use it. 
+So far we only know the name of the sender of a message. Let's say we want to add more information about the message, e.g. the time it was sent and the location of the sender at the time of sending. To incorporate this information we construct a new case class `Sender` and adapt the ``Message` to use it. 
 
 ```scala
-case class Sender(name: String, location: String, device: String)
+case class Sender(name: String, location: String)
 
 case class Message(text: String, timestamp: DateTime, sender: Sender)
 ```
@@ -94,47 +94,39 @@ class ChatRoom extends PersistentActor {
 }
 ```
 
-## Step 4 More fine grained limits and privileged users
+## Step 4 Privileged users
 
-The user limit feature is working great, but the administrator responsible for setting the limit notices that there is a pattern to the limit changes he is setting for the chatroom. During the week there is a group of people who use the chatroom for *serious business* and ask the administrator to allow a maximum number of 5 people in the room. However, during the weekend a larger group of users would like to use the same chatroom and the administrator again increases the limit to 20. 
-
-To automate this pattern the limit feature is extended to distinguish between a week and a weekend limit. Also, some users have special privileges and are always allowed in the room, even if the user limit is reached. To achieve these changes the `SetUserLimit` event is extended and renamed to a more general `SetConfiguration` case class. Last, in the previous version there would always be a limit once one was set. By using an `Option[Int]` in the command and corresponding event, we allow the removal of a maximum number of users in the chatroom.
+Some users have special privileges and are always allowed in the room, even if the user limit is reached. To achieve this functionality the `SetUserLimit` event is extended and renamed to a more general `SetConfiguration` case class. Next to setting the limit the administrator is allowed to pass a list of privileged users. Note that in the previous version there would always be a limit once one was set. By using an `Option[Int]` in the command and corresponding event, we allow the removal of a maximum number of users in the chatroom.
 
 ```scala
 class ChatRoom extends PersistentActor {
 
-  case class SetConfiguration(weekLimit: Option[Int], weekendLimit: Option[Int], privilegedUsers: Set[String]) extends Command
+  case class SetConfiguration(limit: Option[Int], privilegedUsers: Set[String]) extends Command
 
-  case class ConfigurationSet(weekLimit: Option[Int], weekendLimit: Option[Int], privilegedUsers: Set[String]) extends Event
+  case class ConfigurationSet(limit: Option[Int], privilegedUsers: Set[String]) extends Event
 
-  var weekLimit: Option[Int] = None
-  var weekendLimit: Option[Int] = None
+  var limit: Option[Int] = None
   var priviligedUsers: Set[String] = Set.empty
 
   def receiveCommand: Receive = {
     case Join(username) if privilegedUsers.contains(username) =>
        join(username)
-    case Join if isWeekend && weekendLimit.fold(false)(_ == users.size) =>
+    case Join if limit.fold(false)(_ == users.size) =>
       sender() ! UserLimitReached
-    case Join if isWeek && weekLimit.fold(false)(_ == users.size)
-      sender() ! UserLimitReached
-    case SetConfiguration(weekLimit, weekendLimit, privilegedUsers) =>
-      persist(ConfigurationSet(weekLimit, weekendLimit, privilegedUsers)) { event =>
+    case SetConfiguration(limit, privilegedUsers) =>
+      persist(ConfigurationSet(limit, privilegedUsers)) { event =>
         updateState(event)
       }
   }
 
   private def updateState(event: Event) = event match {
     ...
-    case ConfigurationSet(weekLimit, weekendLimit, privilegedUsers) =>
-      this.weekLimit = weekLimit
-      this.weekendLimit = weekendLimit
+    case ConfigurationSet(limit, privilegedUsers) =>
+      this.limit = limit
       this.privilegedUsers = privilegedUsers
     ...
   }
 }
 ```
 
-## Step 3 - Accounts and their properties
-
-## Step 4 - Visibility / private rooms
+## Step 5 - ....
