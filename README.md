@@ -30,6 +30,19 @@ libraryDependencies += "com.scalapenos" %% "stamina-json" % "0.1.1-SNAPSHOT"
 
 Our final task before releasing a public beta is to create a *stamina-sample-app* to show Stamina in action on a representative project.
 
+## Adding Stamina to your project
+To add stamina to your project, use snapshot releases available via
+[Maven Central](https://oss.sonatype.org/content/repositories/snapshots/com/scalapenos/). Add the
+following lines to your SBT build:
+```scala
+resolvers ++= Seq(
+  "Sonatype Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots/"
+)
+
+libraryDependencies ++= Seq(
+  "com.scalapenos" %% "stamina-json" % "0.1.1-SNAPSHOT"
+)
+```
 
 # Stamina in Detail
 Stamina is an Akka serialization toolkit written specifically for use with Akka Persistence. Its main defining characteristics are:
@@ -49,9 +62,9 @@ The first (and currently only) implementation is based on spray-json. It support
 //
 // Normally, of course, you would only need one case class,
 // which would always represent the current version (V3 in this case).
-import stamina.json._
-import stamina.json.SprayJsonMacros._
+import fommil.sjs.FamilyFormats._ // For this example's ease, auto-generated json formats are used here
 import spray.json.lenses.JsonLenses._
+import stamina.json._
 
 // spray-json persister for V1.
 // Essentially equivalent to any existing Akka serializer except
@@ -60,17 +73,47 @@ val v1CartCreatedPersister = persister[CartCreatedV1]("cart-created")
 
 // spray-json persister for V2 but with support for migration
 // of data writen in the V1 format.
-val v2CartCreatedPersister = persister[CartCreatedV2, V2]("cart-created",
-  from[V1].to[V2](_.update('cart / 'items / * / 'price ! set[Int](1000)))
+val v2CartCreatedPersister = persister[CartCreatedV2, V2](
+  "cart-created",
+  from[V1]
+    .to[V2](_.update('cart / 'items / * / 'price ! set[Int](1000)))
 )
 
 // spray-json persister for V3 but with support for migration
 // of data writen in the V1 and V2 formats.
-val v3CartCreatedPersister = persister[CartCreatedV3, V3]("cart-created",
+val v3CartCreatedPersister = persister[CartCreatedV3, V3](
+  "cart-created",
   from[V1]
     .to[V2](_.update('cart / 'items / * / 'price ! set[Int](1000)))
     .to[V3](_.update('timestamp ! set[Long](System.currentTimeMillis)))
 )
+```
+
+For these persisters to be actually used by the Akka serialization system, you will need to bundle them into an Akka
+serializer and then register that serializer for your classes. To make that registration process a little simpler
+Stamina comes with a marker trait called `Persistable`. Of course you can use your own marker traits instead.
+
+```scala
+class CartCreatedV3(...) extends Persistable
+```
+
+In the example below we create a subclass of `StaminaAkkaSerializer` and pass all our Persister instances into it. We
+then register this serializer with Akka in our application.conf and bind it to all instances/subclasses of the
+`Persistable` marker trait.
+
+```scala
+class WebshopSerializer extends StaminaAkkaSerializer(v3CartCreatedPersister, ...)
+```
+
+```
+akka.actor {
+  serializers {
+    serializer  = "package.name.WebshopSerializer"
+  }
+  serialization-bindings {
+    "stamina.Persistable" = serializer
+  }
+}
 ```
 
 An example application and a testkit with support for regression
