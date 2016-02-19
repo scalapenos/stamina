@@ -1,6 +1,6 @@
 package stamina
 
-import scala.reflect.ClassTag
+import scala.reflect._
 import scala.util._
 
 /**
@@ -36,4 +36,6 @@ abstract class Persister[T: ClassTag, V <: Version: VersionInfo](val key: String
       case Failure(error)  ⇒ throw UnrecoverableDataException(persisted, error)
     }
   }
+
+  private[stamina] val tag = classTag[T]
 }

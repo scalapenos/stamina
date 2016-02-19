@@ -10,6 +10,8 @@ import scala.reflect.ClassTag
  *
  */
 case class Persisters(persisters: List[Persister[_, _]]) {
+  requireNoOverlappingTags()
+
   def canPersist(a: AnyRef): Boolean = persisters.exists(_.canPersist(a))
   def canUnpersist(p: Persisted): Boolean = persisters.exists(_.canUnpersist(p))
 
@@ -28,6 +30,17 @@ case class Persisters(persisters: List[Persister[_, _]]) {
   // format: ON
 
   def ++(other: Persisters): Persisters = Persisters(persisters ++ other.persisters)
+
+  private def requireNoOverlappingTags() = {
+    val overlappingTags = persisters.groupBy(_.tag).filter(_._2.length > 1).mapValues(_.map(_.key))
+
+    require(
+      overlappingTags.isEmpty,
+      s"Overlapping persisters: " + join(overlappingTags.map(tuple ⇒ "Tags " + join(tuple._2) + " all persist " + tuple._1.runtimeClass))
+    )
+  }
+
+  private def join(strings: Iterable[String]) = strings.reduce(_ + ", " + _)
 }
 
 object Persisters {
