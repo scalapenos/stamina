@@ -8,7 +8,7 @@ object Build extends Build {
 
   lazy val basicSettings = Seq(
     organization := "com.scalapenos",
-    version := "0.1.1-SNAPSHOT",
+    version := "0.1.2-SNAPSHOT",
     licenses := Seq("The MIT License (MIT)" -> url("http://opensource.org/licenses/MIT")),
     scalaVersion := "2.11.7",
     incOptions := incOptions.value.withNameHashing(true),
