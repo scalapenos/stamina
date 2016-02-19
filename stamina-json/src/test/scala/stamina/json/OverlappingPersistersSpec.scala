@@ -23,7 +23,7 @@ class OverlappingPersisterSpec extends StaminaJsonSpec {
           persister[Event[Payload2]]("payload2")
         )
       }
-      e.getMessage() should be("requirement failed: Overlapping persisters: Tags payload1, payload2 all persist class stamina.json.OverlappingPersisterSpecDomain$Event")
+      e.getMessage() should be("requirement failed: Overlapping persisters: Persisters with keys 'payload1', 'payload2' all persist class stamina.json.OverlappingPersisterSpecDomain$Event.")
 
       /**
        * When we actually want to support this situation, then this should work:
