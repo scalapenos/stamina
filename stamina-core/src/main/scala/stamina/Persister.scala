@@ -10,8 +10,8 @@ import scala.util._
  */
 abstract class Persister[T: ClassTag, V <: Version: VersionInfo](val key: String) {
   lazy val currentVersion = Version.numberFor[V]
-
   lazy val currentManifest = Manifest(key, currentVersion)
+
   def persist(t: T): Array[Byte]
   def unpersist(manifest: Manifest, persisted: Array[Byte]): T
 
