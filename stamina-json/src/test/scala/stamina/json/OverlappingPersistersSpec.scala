@@ -16,18 +16,24 @@ class OverlappingPersisterSpec extends StaminaJsonSpec {
     implicit val eventPayload1Format = jsonFormat1(Event[Payload1])
     implicit val eventPayload2Format = jsonFormat1(Event[Payload2])
 
-    // TODO #43 make sure we fail at compile (or perhaps initialization) time, not at persist
-    "correctly handle overlapping persisters" ignore {
-      val persisters = Persisters(
-        persister[Event[Payload1]]("payload1"),
-        persister[Event[Payload2]]("payload2")
-      )
+    /** #43 In the future we might want to support this situation instead of failing at initialization time */
+    "correctly handle overlapping persisters" in {
+      val e = intercept[IllegalArgumentException] {
+        Persisters(
+          persister[Event[Payload1]]("payload1"),
+          persister[Event[Payload2]]("payload2")
+        )
+      }
+      e.getMessage() should be("requirement failed: Overlapping persisters: Tags payload1, payload2 all persist class stamina.json.OverlappingPersisterSpec$$anonfun$1$Event$3")
 
-      val event1 = Event(Payload1("abcd"))
-      persisters.unpersist(persisters.persist(event1)) should equal(event1)
-
-      val event2 = Event(Payload2(42))
-      persisters.unpersist(persisters.persist(event2)) should equal(event2)
+      /**
+       * When we actually want to support this situation, then this should work:
+       *
+       * val event1 = Event(Payload1("abcd"))
+       * persisters.unpersist(persisters.persist(event1)) should equal(event1)
+       * val event2 = Event(Payload2(42))
+       * persisters.unpersist(persisters.persist(event2)) should equal(event2)
+       */
     }
   }
 }
