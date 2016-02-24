@@ -2,6 +2,7 @@ package stamina
 
 import scala.reflect.ClassTag
 import spray.json._
+import scala.reflect.runtime.universe._
 
 import migrations._
 
@@ -45,7 +46,7 @@ package object json {
    * and unpersist version 1. Use this function to produce the initial persister
    * for a new domain class/event/entity.
    */
-  def persister[T: RootJsonFormat: ClassTag](key: String): JsonPersister[T, V1] = new V1JsonPersister[T](key)
+  def persister[T: RootJsonFormat: ClassTag](key: String)(implicit typeTag: TypeTag[T] = null): JsonPersister[T, V1] = new V1JsonPersister[T](key)(Option(typeTag))
 
   /**
    * Creates a JsonPersister[T, V] where V is a version greater than V1.
@@ -53,7 +54,7 @@ package object json {
    * JsonMigrator[V] to migrate any values older than version V to version V before
    * unpersisting them.
    */
-  def persister[T: RootJsonFormat: ClassTag, V <: Version: VersionInfo: MigratableVersion](key: String, migrator: JsonMigrator[V]): JsonPersister[T, V] = new VnJsonPersister[T, V](key, migrator)
+  def persisterVn[T: RootJsonFormat: ClassTag, V <: Version: VersionInfo: MigratableVersion](key: String, migrator: JsonMigrator[V])(implicit typeTag: TypeTag[T] = null): JsonPersister[T, V] = new VnJsonPersister[T, V](key, migrator)(Option(typeTag))
 
   private[json] def toJsonBytes[T](t: T)(implicit writer: RootJsonWriter[T]): ByteString = ByteString(writer.write(t).compactPrint)
   private[json] def fromJsonBytes[T](bytes: ByteString)(implicit reader: RootJsonReader[T]): T = reader.read(parseJson(bytes))
@@ -64,12 +65,12 @@ package json {
   /**
    * Simple abstract marker superclass to unify (and hide) the two internal Persister implementations.
    */
-  sealed abstract class JsonPersister[T: RootJsonFormat: ClassTag, V <: Version: VersionInfo](key: String) extends Persister[T, V](key) {
+  sealed abstract class JsonPersister[T: RootJsonFormat: ClassTag, V <: Version: VersionInfo](key: String)(typeTagOption: Option[TypeTag[T]]) extends Persister[T, V](key)(typeTagOption) {
     private[json] def cannotUnpersist(p: Persisted) =
       s"""JsonPersister[${implicitly[ClassTag[T]].runtimeClass.getSimpleName}, V${currentVersion}](key = "${key}") cannot unpersist data with key "${p.key}" and version ${p.version}."""
   }
 
-  private[json] class V1JsonPersister[T: RootJsonFormat: ClassTag](key: String) extends JsonPersister[T, V1](key) {
+  private[json] class V1JsonPersister[T: RootJsonFormat: ClassTag](key: String)(typeTagOption: Option[TypeTag[T]]) extends JsonPersister[T, V1](key)(typeTagOption) {
     def persist(t: T): Persisted = Persisted(key, currentVersion, toJsonBytes(t))
     def unpersist(p: Persisted): T = {
       if (canUnpersist(p)) fromJsonBytes[T](p.bytes)
@@ -77,7 +78,7 @@ package json {
     }
   }
 
-  private[json] class VnJsonPersister[T: RootJsonFormat: ClassTag, V <: Version: VersionInfo: MigratableVersion](key: String, migrator: JsonMigrator[V]) extends JsonPersister[T, V](key) {
+  private[json] class VnJsonPersister[T: RootJsonFormat: ClassTag, V <: Version: VersionInfo: MigratableVersion](key: String, migrator: JsonMigrator[V])(typeTagOption: Option[TypeTag[T]]) extends JsonPersister[T, V](key)(typeTagOption) {
     override def canUnpersist(p: Persisted): Boolean = p.key == key && migrator.canMigrate(p.version)
 
     def persist(t: T): Persisted = Persisted(key, currentVersion, toJsonBytes(t))
