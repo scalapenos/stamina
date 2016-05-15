@@ -10,9 +10,9 @@ object TestOnlyPersister {
   private val javaSerializer = new JavaSerializer(system.asInstanceOf[ExtendedActorSystem])
   import javaSerializer._
 
-  def persister[T <: AnyRef: ClassTag](key: String)(implicit typeTag: TypeTag[T] = null): Persister[T, V1] = new JavaPersister[T](key)(Option(typeTag))
+  def persister[T <: AnyRef: ClassTag: TypeTag](key: String): Persister[T, V1] = new JavaPersister[T](key)
 
-  private class JavaPersister[T <: AnyRef: ClassTag](key: String)(typeTagOption: Option[TypeTag[T]] = None) extends Persister[T, V1](key)(typeTagOption) {
+  private class JavaPersister[T <: AnyRef: ClassTag: TypeTag](key: String) extends Persister[T, V1](key) {
     def persist(t: T): Persisted = Persisted(key, currentVersion, toBinary(t))
     def unpersist(p: Persisted): T = {
       if (canUnpersist(p)) fromBinary(p.bytes.toArray).asInstanceOf[T]

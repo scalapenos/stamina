@@ -9,7 +9,7 @@ import scala.reflect.runtime.universe.{Try ⇒ uTry, _}
  * at version V and unpersisting persisted instances of T for all versions up
  * to and including version V.
  */
-abstract class Persister[T: ClassTag, V <: Version: VersionInfo](val key: String)(typeTagOption: Option[TypeTag[T]] = None) {
+abstract class Persister[T: ClassTag: TypeTag, V <: Version: VersionInfo](val key: String) {
   lazy val currentVersion = Version.numberFor[V]
 
   def persist(t: T): Persisted
@@ -20,14 +20,11 @@ abstract class Persister[T: ClassTag, V <: Version: VersionInfo](val key: String
 
   private[stamina] def convertToT(any: AnyRef): Option[T] = any match {
     case t: T ⇒ t match {
-      case tagged: TypeTagged[_] if typeTagOption.isDefined ⇒
-        val typeTag = tagged.tag
-        val currentTypeTag = typeTagOption.get.tpe.toString
-        typeTag.tpe.toString match {
-          case `currentTypeTag` ⇒ Some(t)
-          case _                ⇒ None
-        }
-      case _ ⇒ Some(t)
+      case tagged: TypeTagged[_] ⇒
+        if (typeTag[T].tpe =:= tagged.tag.tpe) Some(t)
+        else None
+      case _ ⇒
+        Some(t)
     }
     case _ ⇒ None
   }
@@ -47,7 +44,9 @@ abstract class Persister[T: ClassTag, V <: Version: VersionInfo](val key: String
     }
   }
 
-  private[stamina] val tag = typeTagOption.map(_.tpe).getOrElse(classTag[T].runtimeClass)
+  private[stamina] val tag =
+    if (typeTag[T].tpe <:< typeOf[TypeTagged[_]]) typeTag[T].tpe
+    else classTag[T].runtimeClass
 }
 
 object Persister {
