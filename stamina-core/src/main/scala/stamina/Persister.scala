@@ -2,7 +2,7 @@ package stamina
 
 import scala.reflect._
 import scala.util._
-import scala.reflect.runtime.universe.{Try ⇒ uTry, _}
+import scala.reflect.runtime.universe.{Try ⇒ _, _}
 
 /**
  * A Persister[T, V] provides a type-safe API for persisting instances of T
