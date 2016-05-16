@@ -3,7 +3,7 @@ package testkit
 
 import org.scalatest._
 import org.scalatest.events._
-import org.scalatest.matchers.{ BePropertyMatchResult, BePropertyMatcher }
+import org.scalatest.matchers.{BePropertyMatchResult, BePropertyMatcher}
 
 import scala.reflect.ClassTag
 
@@ -23,7 +23,8 @@ class ScalatestTestGenerationSpec extends StaminaTestKitSpec {
       "TestDomainSerialization" should {
         persisters.generateTestsFor(
           sample(item1),
-          sample("failing-item-2", item2))
+          sample("failing-item-2", item2)
+        )
       }
     }
 

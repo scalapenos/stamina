@@ -10,7 +10,7 @@ class PersistersSpec extends StaminaSpec {
 
   val persisters = Persisters(itemPersister, cartPersister)
 
-  "An non-empty instance of Persisters" should {
+  "A non-empty instance of Persisters" should {
     import persisters._
 
     "correctly implement canPersist()" in {

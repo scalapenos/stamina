@@ -1,6 +1,6 @@
 package stamina
 
-import scala.reflect.ClassTag
+import scala.reflect._
 import scala.util._
 
 /**
@@ -18,7 +18,7 @@ abstract class Persister[T: ClassTag, P <: AnyRef, V <: Version: VersionInfo](va
   def canPersist(a: AnyRef): Boolean = convertToT(a).isDefined
   def canUnpersist(m: Manifest): Boolean = m.key == key && m.version <= currentVersion
 
-  def translate[U <: AnyRef](p: P => U, u: U => P): Persister[T, U, V] = {
+  def translate[U <: AnyRef](p: P ⇒ U, u: U ⇒ P): Persister[T, U, V] = {
     val original = this
     new Persister[T, U, V](key) {
       override def persist(t: T): U = p(original.persist(t))
@@ -45,4 +45,6 @@ abstract class Persister[T: ClassTag, P <: AnyRef, V <: Version: VersionInfo](va
       case Failure(error)  ⇒ throw UnrecoverableDataException(manifest, error)
     }
   }
+
+  private[stamina] val tag = classTag[T]
 }

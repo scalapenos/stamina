@@ -10,6 +10,8 @@ import scala.reflect.ClassTag
  *
  */
 case class Persisters[P <: AnyRef](persisters: List[Persister[_, P, _]]) {
+  requireNoOverlappingTags()
+
   def canPersist(a: AnyRef): Boolean = persisters.exists(_.canPersist(a))
   def canUnpersist(manifest: Manifest): Boolean = persisters.exists(_.canUnpersist(manifest))
 
@@ -37,6 +39,13 @@ case class Persisters[P <: AnyRef](persisters: List[Persister[_, P, _]]) {
   // format: ON
 
   def ++(other: Persisters[P]): Persisters[P] = Persisters(persisters ++ other.persisters)
+
+  private def requireNoOverlappingTags() = {
+    val overlappingTags = persisters.groupBy(_.tag).filter(_._2.length > 1).mapValues(_.map(_.key))
+    val warnings = overlappingTags.map { case (tag, keys) ⇒ s"""Persisters with keys ${keys.mkString("'", "', '", "'")} all persist ${tag.runtimeClass}.""" }
+
+    require(overlappingTags.isEmpty, s"""Overlapping persisters: ${warnings.mkString(" ")}""")
+  }
 }
 
 object Persisters {

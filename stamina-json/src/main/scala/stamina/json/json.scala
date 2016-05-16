@@ -56,7 +56,7 @@ package object json {
   def persister[T: RootJsonFormat: ClassTag, V <: Version: VersionInfo: MigratableVersion](key: String, migrator: JsonMigrator[V]): JsonPersister[T, V] = new VnJsonPersister[T, V](key, migrator)
 
   def toByteArrayPersister[T: ClassTag, V <: Version: VersionInfo](persister: Persister[T, JsValue, V]): Persister[T, Array[Byte], V] =
-    persister.translate(_.compactPrint.getBytes(UTF_8), b => JsonParser(ParserInput(b)))
+    persister.translate(_.compactPrint.getBytes(UTF_8), b ⇒ JsonParser(ParserInput(b)))
 
   def toByteArrayPersisters[T: ClassTag, V <: Version: VersionInfo](persisters: List[Persister[T, JsValue, V]]): Persisters[Array[Byte]] =
     new Persisters[Array[Byte]](persisters.map(toByteArrayPersister(_)))
