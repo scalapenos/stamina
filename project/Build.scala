@@ -42,7 +42,7 @@ object Build extends Build {
     .settings(libraryDependencies ++=
       compile(
         akkaActor,
-	scalaReflect
+        scalaReflect
       ) ++
       test(
         scalatest
