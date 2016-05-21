@@ -1,6 +1,6 @@
 
 [![Build Status](https://img.shields.io/travis/scalapenos/stamina.svg)](https://travis-ci.org/scalapenos/stamina)
-![Version](https://img.shields.io/badge/version-0.1.1--SNAPSHOT-orange.svg "Version: 0.1.1-SNAPSHOT")
+![Version](https://img.shields.io/badge/version-0.1.1-orange.svg "Version: 0.1.1")
 ![License](https://img.shields.io/badge/license-MIT-blue.svg "License: MIT")
 
 Stamina is an Akka serialization toolkit written specifically for use with Akka Persistence.
@@ -31,17 +31,21 @@ libraryDependencies += "com.scalapenos" %% "stamina-json" % "0.1.1-SNAPSHOT"
 Our final task before releasing a public beta is to create a *stamina-sample-app* to show Stamina in action on a representative project.
 
 ## Adding Stamina to your project
-To add stamina to your project, use snapshot releases available via
-[Maven Central](https://oss.sonatype.org/content/repositories/snapshots/com/scalapenos/). Add the
+Stamina is available via [Maven Central](https://search.maven.org/), simply add it to your SBT build:
+
+```scala
+libraryDependencies += "com.scalapenos" %% "stamina-json" % "0.1.1"
+```
+
+If you want to use a development snapshots, use the 
+[Sonatype Snapshot Repository](https://oss.sonatype.org/content/repositories/snapshots/com/scalapenos/). Add the
 following lines to your SBT build:
 ```scala
 resolvers ++= Seq(
   "Sonatype Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots/"
 )
 
-libraryDependencies ++= Seq(
-  "com.scalapenos" %% "stamina-json" % "0.1.1-SNAPSHOT"
-)
+libraryDependencies += "com.scalapenos" %% "stamina-json" % "0.1.1"
 ```
 
 # Stamina in Detail
