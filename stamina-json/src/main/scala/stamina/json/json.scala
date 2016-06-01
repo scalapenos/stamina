@@ -55,35 +55,43 @@ package object json {
    */
   def persister[T: RootJsonFormat: ClassTag, V <: Version: VersionInfo: MigratableVersion](key: String, migrator: JsonMigrator[V]): JsonPersister[T, V] = new VnJsonPersister[T, V](key, migrator)
 
-  private[json] def toJsonBytes[T](t: T)(implicit writer: RootJsonWriter[T]): ByteString = ByteString(writer.write(t).compactPrint)
-  private[json] def fromJsonBytes[T](bytes: ByteString)(implicit reader: RootJsonReader[T]): T = reader.read(parseJson(bytes))
-  private[json] def parseJson(bytes: ByteString): JsValue = JsonParser(ParserInput(bytes.toArray))
+  def toByteArrayPersister[T: ClassTag, V <: Version: VersionInfo](persister: Persister[T, JsValue, V]): Persister[T, Array[Byte], V] =
+    persister.translate(_.compactPrint.getBytes(UTF_8), b ⇒ JsonParser(ParserInput(b)))
+
+  def toByteArrayPersisters[T: ClassTag, V <: Version: VersionInfo](persisters: List[Persister[T, JsValue, V]]): Persisters[Array[Byte]] =
+    new Persisters[Array[Byte]](persisters.map(toByteArrayPersister(_)))
+
+  import java.nio.charset.StandardCharsets
+  val UTF_8: String = StandardCharsets.UTF_8.name()
+  private[json] def toJson[T](t: T)(implicit writer: RootJsonWriter[T]): JsValue = writer.write(t)
+  private[json] def fromJson[T](persisted: JsValue)(implicit reader: RootJsonReader[T]): T = reader.read(persisted)
+  private[json] def parseJson(bytes: Array[Byte]): JsValue = JsonParser(ParserInput(bytes.toArray))
 }
 
 package json {
   /**
    * Simple abstract marker superclass to unify (and hide) the two internal Persister implementations.
    */
-  sealed abstract class JsonPersister[T: RootJsonFormat: ClassTag, V <: Version: VersionInfo](key: String) extends Persister[T, V](key) {
-    private[json] def cannotUnpersist(p: Persisted) =
-      s"""JsonPersister[${implicitly[ClassTag[T]].runtimeClass.getSimpleName}, V${currentVersion}](key = "${key}") cannot unpersist data with key "${p.key}" and version ${p.version}."""
+  sealed abstract class JsonPersister[T: RootJsonFormat: ClassTag, V <: Version: VersionInfo](key: String) extends Persister[T, JsValue, V](key) {
+    private[json] def cannotUnpersist(manifest: Manifest) =
+      s"""JsonPersister[${implicitly[ClassTag[T]].runtimeClass.getSimpleName}, V${currentVersion}](key = "${key}") cannot unpersist data with manifest "$manifest"."""
   }
 
   private[json] class V1JsonPersister[T: RootJsonFormat: ClassTag](key: String) extends JsonPersister[T, V1](key) {
-    def persist(t: T): Persisted = Persisted(key, currentVersion, toJsonBytes(t))
-    def unpersist(p: Persisted): T = {
-      if (canUnpersist(p)) fromJsonBytes[T](p.bytes)
-      else throw new IllegalArgumentException(cannotUnpersist(p))
+    def persist(t: T): JsValue = toJson(t)
+    def unpersist(manifest: Manifest, p: JsValue): T = {
+      if (canUnpersist(manifest)) fromJson[T](p)
+      else throw new IllegalArgumentException(cannotUnpersist(manifest))
     }
   }
 
   private[json] class VnJsonPersister[T: RootJsonFormat: ClassTag, V <: Version: VersionInfo: MigratableVersion](key: String, migrator: JsonMigrator[V]) extends JsonPersister[T, V](key) {
-    override def canUnpersist(p: Persisted): Boolean = p.key == key && migrator.canMigrate(p.version)
+    override def canUnpersist(m: Manifest): Boolean = m.key == key && migrator.canMigrate(m.version)
 
-    def persist(t: T): Persisted = Persisted(key, currentVersion, toJsonBytes(t))
-    def unpersist(p: Persisted): T = {
-      if (canUnpersist(p)) migrator.migrate(parseJson(p.bytes), p.version).convertTo[T]
-      else throw new IllegalArgumentException(cannotUnpersist(p))
+    def persist(t: T): JsValue = toJson(t)
+    def unpersist(manifest: Manifest, p: JsValue): T = {
+      if (canUnpersist(manifest)) migrator.migrate(p, manifest.version).convertTo[T]
+      else throw new IllegalArgumentException(cannotUnpersist(manifest))
     }
   }
 }

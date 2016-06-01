@@ -9,27 +9,36 @@ import scala.reflect.ClassTag
  * one single entry-point for subclasses of <code>StaminaAkkaSerializer</code>
  *
  */
-case class Persisters(persisters: List[Persister[_, _]]) {
+case class Persisters[P <: AnyRef](persisters: List[Persister[_, P, _]]) {
   requireNoOverlappingTags()
 
   def canPersist(a: AnyRef): Boolean = persisters.exists(_.canPersist(a))
-  def canUnpersist(p: Persisted): Boolean = persisters.exists(_.canUnpersist(p))
+  def canUnpersist(manifest: Manifest): Boolean = persisters.exists(_.canUnpersist(manifest))
 
   // format: OFF
-  def persist(anyref: AnyRef): Persisted = {
-    persisters.find(_.canPersist(anyref))
-              .map(_.persistAny(anyref))
-              .getOrElse(throw UnregisteredTypeException(anyref))
+  private def persister[T <: AnyRef](anyref: T): Persister[T, P, _] =
+    persisters
+      .find(_.canPersist(anyref))
+      .map(_.asInstanceOf[Persister[T, P, _]])
+      .getOrElse(throw UnregisteredTypeException(anyref))
+
+  def manifest(anyref: AnyRef): Manifest =
+    persister(anyref).currentManifest
+
+  def persist(anyref: AnyRef): Persisted[P] = {
+    val p = persister(anyref)
+    Persisted(p.currentManifest, p.persistAny(anyref))
   }
 
-  def unpersist(persisted: Persisted): AnyRef = {
-    persisters.find(_.canUnpersist(persisted))
-              .map(_.unpersistAny(persisted))
-              .getOrElse(throw UnsupportedDataException(persisted))
+  def unpersist(persisted: Persisted[P]): AnyRef = unpersist(persisted.persisted, persisted.manifest)
+  def unpersist(persisted: AnyRef, manifest: Manifest): AnyRef = {
+    persisters.find(_.canUnpersist(manifest))
+              .map(_.unpersistAny(manifest, persisted))
+              .getOrElse(throw UnsupportedDataException(manifest.key, manifest.version))
   }
   // format: ON
 
-  def ++(other: Persisters): Persisters = Persisters(persisters ++ other.persisters)
+  def ++(other: Persisters[P]): Persisters[P] = Persisters(persisters ++ other.persisters)
 
   private def requireNoOverlappingTags() = {
     val overlappingTags = persisters.groupBy(_.tag).filter(_._2.length > 1).mapValues(_.map(_.key))
@@ -40,6 +49,6 @@ case class Persisters(persisters: List[Persister[_, _]]) {
 }
 
 object Persisters {
-  def apply[T: ClassTag, V <: Version: VersionInfo](persister: Persister[T, V]): Persisters = apply(List(persister))
-  def apply(first: Persister[_, _], rest: Persister[_, _]*): Persisters = apply(first :: rest.toList)
+  def apply[T: ClassTag, P <: AnyRef, V <: Version: VersionInfo](persister: Persister[T, P, V]): Persisters[P] = apply(List(persister))
+  def apply[P <: AnyRef](first: Persister[_, P, _], rest: Persister[_, P, _]*): Persisters[P] = apply(first :: rest.toList)
 }

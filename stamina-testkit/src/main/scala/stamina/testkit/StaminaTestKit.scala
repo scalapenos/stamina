@@ -15,7 +15,7 @@ trait StaminaTestKit { self: org.scalatest.WordSpecLike ⇒
   def sample(sampleId: String, persistable: AnyRef) = new PersistableSample(sampleId, persistable, Some(sampleId))
   def sample(sampleId: String, persistable: AnyRef, description: String) = new PersistableSample(sampleId, persistable, Some(description))
 
-  implicit class TestablePersisters(persisters: Persisters) extends org.scalatest.Matchers {
+  implicit class TestablePersisters(persisters: Persisters[Array[Byte]]) extends org.scalatest.Matchers {
     def generateTestsFor(samples: PersistableSample*): Unit = {
       samples.foreach { sample ⇒
         generateRoundtripTestFor(sample)
@@ -45,9 +45,9 @@ trait StaminaTestKit { self: org.scalatest.WordSpecLike ⇒
       val serialized = persisters.persist(sample.persistable)
       byteStringFromResource(serialized.key, version, sample.sampleId) match {
         case Success(binary) ⇒
-          persisters.unpersist(binary) should equal(sample.persistable)
+          persisters.unpersist(Persisted(Manifest(serialized.key, version), binary)) should equal(sample.persistable)
         case Failure(_: java.io.FileNotFoundException) if version == latestVersion ⇒
-          val writtenToPath = saveByteArrayToTargetSerializationDirectory(serialized.bytes.toArray, serialized.key, version, sample.sampleId)
+          val writtenToPath = saveByteArrayToTargetSerializationDirectory(serialized.persisted.toArray, serialized.key, version, sample.sampleId)
           fail(s"You appear to have added a new serialization sample to the stamina persisters' test.\n" +
             "A serialized version of this sample must be stored as a project resource for future reference, to ensure future versions of the software can still correctly deserialize serialized objects in this format.\n" +
             "Please copy the generated serialized data into the project test resources:\n" +
@@ -67,7 +67,7 @@ trait StaminaTestKit { self: org.scalatest.WordSpecLike ⇒
       }
     }
 
-    private def byteStringFromResource(key: String, version: Int, sampleId: String): Try[Persisted] = {
+    private def byteStringFromResource(key: String, version: Int, sampleId: String): Try[Array[Byte]] = {
       import scala.io.Source
       val resourceName = s"/$serializedObjectsPackage/${filename(key, version, sampleId)}"
 
@@ -75,8 +75,6 @@ trait StaminaTestKit { self: org.scalatest.WordSpecLike ⇒
         .map(Success(_)).getOrElse(Failure(new java.io.FileNotFoundException(resourceName)))
         .map(Source.fromInputStream(_).mkString)
         .flatMap(base64.Decode(_))
-        .map(akka.util.ByteString(_))
-        .map(Persisted(key, version, _))
     }
 
     private def saveByteArrayToTargetSerializationDirectory(bytes: Array[Byte], key: String, version: Int, sampleId: String) = {

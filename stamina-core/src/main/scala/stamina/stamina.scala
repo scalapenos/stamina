@@ -30,11 +30,19 @@ package stamina {
     extends RuntimeException(s"No persister registered for class: ${obj.getClass}")
     with NoStackTrace
 
-  case class UnsupportedDataException(persisted: Persisted)
-    extends RuntimeException(s"No unpersister registered for key: '${persisted.key}' and version: ${persisted.version}")
+  case class UnsupportedDataException(key: String, version: Int)
+    extends RuntimeException(s"No unpersister registered for key: '$key' and version: $version")
     with NoStackTrace
 
-  case class UnrecoverableDataException(persisted: Persisted, error: Throwable)
-    extends RuntimeException(s"Error while trying to unpersist data with key '${persisted.key}' and version ${persisted.version}. Cause: ${error}")
+  case class UnrecoverableDataException(manifest: Manifest, error: Throwable)
+    extends RuntimeException(s"Error while trying to unpersist data with key '${manifest.key}' and version ${manifest.version}. Cause: ${error}")
     with NoStackTrace
+
+  case class Manifest(manifest: String) {
+    lazy val key: String = manifest.substring(manifest.indexOf('-') + 1)
+    lazy val version: Int = Integer.valueOf(manifest.substring(0, manifest.indexOf('-')))
+  }
+  object Manifest {
+    def apply(key: String, version: Int): Manifest = Manifest(version + "-" + key)
+  }
 }

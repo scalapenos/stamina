@@ -1,13 +1,14 @@
 package stamina
+package codec
 
 /**
  * The encoding used to translate an instance of <code>Persisted</code>
  * to a byte array and back.
  */
-trait PersistedCodec {
+trait PersistedCodec[P <: AnyRef] {
   def identifier: Int
-  def writePersisted(persisted: Persisted): Array[Byte]
-  def readPersisted(bytes: Array[Byte]): Persisted
+  def writePersisted(persisted: Persisted[P]): Array[Byte]
+  def readPersisted(bytes: Array[Byte]): Persisted[P]
 }
 
 /**
@@ -19,13 +20,13 @@ trait PersistedCodec {
  *   - persisted data (n bytes)
  *
  */
-object DefaultPersistedCodec extends PersistedCodec {
+object DefaultPersistedCodec extends PersistedCodec[Array[Byte]] {
   implicit val byteOrder = java.nio.ByteOrder.LITTLE_ENDIAN
   import java.nio.charset.StandardCharsets._
 
   def identifier = 490303
 
-  def writePersisted(persisted: Persisted): Array[Byte] = {
+  def writePersisted(persisted: Persisted[Array[Byte]]): Array[Byte] = {
     val keyBytes = persisted.key.getBytes(UTF_8)
 
     ByteString.
@@ -33,12 +34,12 @@ object DefaultPersistedCodec extends PersistedCodec {
       putInt(keyBytes.length).
       putBytes(keyBytes).
       putInt(persisted.version).
-      append(persisted.bytes).
+      append(ByteString(persisted.persisted)).
       result.
       toArray
   }
 
-  def readPersisted(byteArray: Array[Byte]): Persisted = {
+  def readPersisted(byteArray: Array[Byte]): Persisted[Array[Byte]] = {
     val bytes = ByteString(byteArray)
     val keyLength = bytes.take(4).iterator.getInt
     val (keyBytes, rest) = bytes.drop(4).splitAt(keyLength)

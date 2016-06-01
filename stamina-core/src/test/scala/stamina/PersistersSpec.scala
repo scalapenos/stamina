@@ -22,15 +22,12 @@ class PersistersSpec extends StaminaSpec {
     }
 
     "correctly implement canUnpersist()" in {
-      canUnpersist(itemPersister.persist(item1)) should be(true)
-      canUnpersist(cartPersister.persist(cart)) should be(true)
+      canUnpersist(itemPersister.currentManifest) should be(true)
+      canUnpersist(cartPersister.currentManifest) should be(true)
 
-      canUnpersist(cartCreatedPersister.persist(cartCreated)) should be(false)
-      canUnpersist(Persisted("unknown", 1, ByteString("..."))) should be(false)
-      canUnpersist(Persisted("item", 2, ByteString("..."))) should be(false)
-
-      // works because canUnpersist only looks at the key and the version, not at the raw data
-      canUnpersist(Persisted("item", 1, ByteString("Not an item at all!"))) should be(true)
+      canUnpersist(cartCreatedPersister.currentManifest) should be(false)
+      canUnpersist(Manifest("unknown", 1)) should be(false)
+      canUnpersist(Manifest("item", 2)) should be(false)
     }
 
     "correctly implement persist() and unpersist()" in {
@@ -44,17 +41,17 @@ class PersistersSpec extends StaminaSpec {
 
     "throw an UnsupportedDataException when unpersisting data with an unknown key" in {
       an[UnsupportedDataException] should
-        be thrownBy unpersist(Persisted("unknown", 1, ByteString("...")))
+        be thrownBy unpersist(Array[Byte](), Manifest("unknown", 1))
     }
 
     "throw an UnsupportedDataException when deserializing data with an unsupported version" in {
       an[UnsupportedDataException] should
-        be thrownBy unpersist(Persisted("item", 2, ByteString("...")))
+        be thrownBy unpersist(Array[Byte](), Manifest("item", 2))
     }
 
     "throw an UnrecoverableDataException when an exception occurs while deserializing" in {
       an[UnrecoverableDataException] should
-        be thrownBy unpersist(Persisted("item", 1, ByteString("not an item")))
+        be thrownBy unpersist(ByteString("not an item").toArray, itemPersister.currentManifest)
     }
   }
 }

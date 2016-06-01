@@ -4,16 +4,18 @@ import akka.serialization._
 
 /**
  * A custom Akka Serializer specifically designed for use with Akka Persistence.
+ *
+ * Key and version information is encoded in the manifest.
  */
-abstract class StaminaAkkaSerializer private[stamina] (persisters: Persisters, codec: PersistedCodec) extends Serializer {
-  def this(persisters: List[Persister[_, _]], codec: PersistedCodec = DefaultPersistedCodec) = this(Persisters(persisters), codec)
-  def this(persister: Persister[_, _], persisters: Persister[_, _]*) = this(Persisters(persister :: persisters.toList), DefaultPersistedCodec)
+abstract class StaminaAkkaSerializer private[stamina] (persisters: Persisters[Array[Byte]]) extends SerializerWithStringManifest {
+  def this(persisters: List[Persister[_, Array[Byte], _]]) = this(Persisters(persisters))
+  def this(persister: Persister[_, Array[Byte], _], persisters: Persister[_, Array[Byte], _]*) = this(Persisters(persister :: persisters.toList))
 
-  /** We don't need class manifests since we're using keys to identify types. */
-  val includeManifest: Boolean = false
+  /** Uniquely identifies this Serializer. */
+  val identifier = 490304
 
-  /** Uniquely identifies this Serializer by combining the codec with a unique number. */
-  val identifier = 42 * codec.identifier
+  def manifest(obj: AnyRef): String =
+    persisters.manifest(obj).manifest
 
   /**
    * @throws UnregisteredTypeException when the specified object is not supported by the persisters.
@@ -21,18 +23,18 @@ abstract class StaminaAkkaSerializer private[stamina] (persisters: Persisters, c
   def toBinary(obj: AnyRef): Array[Byte] = {
     if (!persisters.canPersist(obj)) throw UnregisteredTypeException(obj)
 
-    codec.writePersisted(persisters.persist(obj))
+    persisters.persist(obj).persisted
   }
 
   /**
    * @throws UnsupportedDataException when the persisted key and/or version is not supported.
    * @throws UnrecoverableDataException when the key and version are supported but recovery throws an exception.
    */
-  def fromBinary(bytes: Array[Byte], clazz: Option[Class[_]]): AnyRef = {
-    val persisted = codec.readPersisted(bytes)
+  def fromBinary(bytes: Array[Byte], manifest: String): AnyRef = {
+    if (manifest.isEmpty) throw new IllegalArgumentException("No manifest found")
+    val m = Manifest(manifest)
+    if (!persisters.canUnpersist(m)) throw UnsupportedDataException(m.key, m.version)
 
-    if (!persisters.canUnpersist(persisted)) throw UnsupportedDataException(persisted)
-
-    persisters.unpersist(persisted)
+    persisters.unpersist(Persisted(m, bytes))
   }
 }
