@@ -14,7 +14,7 @@ import BasketActor._
 
 import common.DateTimeSupport._
 
-class BasketActorAkkaSerializationSpec extends UnitSpec with ScalaTestKit {
+class BasketActorAkkaSerializationSpec extends UnitSpec with StaminaTestKit {
   val persisters = Persisters(BasketActorAkkaSerialization.persisters)
 
   val timestamp = "2015-01-01T12:34:56.000Z".toDateTime
