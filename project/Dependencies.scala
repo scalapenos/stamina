@@ -5,7 +5,7 @@ object Dependencies {
   val akkaActor     = "com.typesafe.akka"  %% "akka-actor"       % "2.4.2"
   val sprayJson     = "io.spray"           %% "spray-json"       % "1.3.2"
   val jsonLenses    = "net.virtual-void"   %% "json-lenses"      % "0.6.1"
-  val scalatest     = "org.scalatest"      %% "scalatest"        % "2.2.6"
+  val scalatest     = "org.scalatest"      %% "scalatest"        % "3.0.0"
   val base64        = "me.lessis"          %% "base64"           % "0.2.0"
 
   // Only used by the tests
