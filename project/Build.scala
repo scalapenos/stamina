@@ -10,7 +10,7 @@ object Build extends Build {
     organization := "com.scalapenos",
     version := "0.1.1-SNAPSHOT",
     licenses := Seq("The MIT License (MIT)" -> url("http://opensource.org/licenses/MIT")),
-    scalaVersion := "2.11.7",
+    scalaVersion := "2.11.8",
     incOptions := incOptions.value.withNameHashing(true),
     scalacOptions := Seq(
       "-encoding", "utf8",

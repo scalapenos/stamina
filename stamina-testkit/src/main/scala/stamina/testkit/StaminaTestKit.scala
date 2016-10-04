@@ -2,7 +2,6 @@ package stamina
 package testkit
 
 import scala.util._
-import scala.annotation.tailrec
 
 trait StaminaTestKit { self: org.scalatest.WordSpecLike ⇒
 
