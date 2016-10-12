@@ -21,7 +21,7 @@ To use the latest SNAPSHOT release, configure your SBT build like this:
 ```
 resolvers += "Sonatype Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots/"
 
-libraryDependencies += "com.scalapenos" %% "stamina-json" % "0.1.1-SNAPSHOT"
+libraryDependencies += "com.scalapenos" %% "stamina-json" % "0.1.1"
 ```
 
 [stamina-core](stamina-core) and [stamina-json](stamina-json) are pretty much ready and we are happy with the API that has evolved out of the many experiments we have done over the last year. We **are** looking at the new Akka 2.4.x event adapters to see whether integration with akka can be improved using them.
