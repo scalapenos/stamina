@@ -19,10 +19,12 @@ abstract class StaminaAkkaSerializer private[stamina] (persisters: Persisters, c
    * @throws UnregisteredTypeException when the specified object is not supported by the persisters.
    */
   def toBinary(obj: AnyRef): Array[Byte] = {
-    if (!persisters.canPersist(obj)) throw UnregisteredTypeException(obj)
+    if (!persisters.canPersist(obj)) throw cannotPersistError(obj)
 
     codec.writePersisted(persisters.persist(obj))
   }
+
+  def cannotPersistError(obj: AnyRef): RuntimeException = UnregisteredTypeException(obj)
 
   /**
    * @throws UnsupportedDataException when the persisted key and/or version is not supported.
