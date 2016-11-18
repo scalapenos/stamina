@@ -81,7 +81,7 @@ trait StaminaTestKit { self: org.scalatest.WordSpecLike ⇒
     private def saveByteArrayToTargetSerializationDirectory(bytes: Array[Byte], key: String, version: Int, sampleId: String) = {
       import java.nio.file._
       val path = Paths.get(targetDirectoryForExampleSerializations, filename(key, version, sampleId))
-      Files.write(path, base64.Encode(bytes), StandardOpenOption.CREATE)
+      Files.write(path, base64.Encode(bytes), StandardOpenOption.TRUNCATE_EXISTING)
       path.toAbsolutePath
     }
 
