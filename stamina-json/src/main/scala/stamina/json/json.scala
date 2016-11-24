@@ -78,11 +78,13 @@ package json {
   }
 
   private[json] class VnJsonPersister[T: RootJsonFormat: ClassTag, V <: Version: VersionInfo: MigratableVersion](key: String, migrator: JsonMigrator[V]) extends JsonPersister[T, V](key) {
-    override def canUnpersist(p: Persisted): Boolean = p.key == key && migrator.canMigrate(p.version)
+    private val toVersionNumber = implicitly[VersionInfo[V]].versionNumber
+
+    override def canUnpersist(p: Persisted): Boolean = p.key == key && migrator.canMigrate(p.version, toVersionNumber)
 
     def persist(t: T): Persisted = Persisted(key, currentVersion, toJsonBytes(t))
     def unpersist(p: Persisted): T = {
-      if (canUnpersist(p)) migrator.migrate(parseJson(p.bytes), p.version).convertTo[T]
+      if (canUnpersist(p)) migrator.migrate(parseJson(p.bytes), p.version, toVersionNumber).convertTo[T]
       else throw new IllegalArgumentException(cannotUnpersist(p))
     }
   }
