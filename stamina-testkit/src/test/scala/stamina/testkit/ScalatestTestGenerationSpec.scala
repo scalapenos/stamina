@@ -57,12 +57,12 @@ class ScalatestTestGenerationSpec extends StaminaTestKitSpec {
       }
     }
 
-    "the sample is only for version 2 and up" should {
+    "the sample is only suitable for version 2 and up" should {
       val spec = new StaminaTestKit with WordSpecLike {
-        val persisters = Persisters(ItemPersister("item1"))
+        val persisters = Persisters(ItemPersister("item2"))
         "TestDomainSerialization" should {
           persisters.generateTestsFor(
-            sample(item1).from[V2]
+            sample(item2).from[V2]
           )
         }
       }
