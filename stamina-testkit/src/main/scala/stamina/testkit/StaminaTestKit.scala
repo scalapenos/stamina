@@ -7,7 +7,7 @@ trait StaminaTestKit { self: org.scalatest.WordSpecLike ⇒
 
   val defaultSampleId = "default"
   case class PersistableSample[FromVersion <: Version: VersionInfo](sampleId: String, persistable: AnyRef, description: Option[String]) {
-    override def toString = persistable.getClass.getSimpleName + description.map(" " + _).getOrElse("")
+    override def toString = SimpleClassNameExtractor(persistable.getClass) + description.map(" " + _).getOrElse("")
     val fromVersionNumber = implicitly[VersionInfo[FromVersion]].versionNumber
 
     def from[NewFromVersion <: Version: VersionInfo] = PersistableSample[NewFromVersion](sampleId, persistable, description)
@@ -92,5 +92,11 @@ trait StaminaTestKit { self: org.scalatest.WordSpecLike ⇒
 
     val targetDirectoryForExampleSerializations = System.getProperty("java.io.tmpdir")
     val serializedObjectsPackage = "serialization"
+  }
+
+  // Workaround for https://issues.scala-lang.org/browse/SI-2034
+  private[testkit] object SimpleClassNameExtractor {
+    def extractSimpleClassName(input: String) = input.split("\\.").last.split("\\$").last
+    def apply[T](input: Class[T]): String = extractSimpleClassName(input.getName)
   }
 }

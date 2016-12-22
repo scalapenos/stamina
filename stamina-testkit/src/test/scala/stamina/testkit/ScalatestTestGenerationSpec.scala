@@ -23,7 +23,8 @@ class ScalatestTestGenerationSpec extends StaminaTestKitSpec {
         "TestDomainSerialization" should {
           persisters.generateTestsFor(
             sample(item1),
-            sample("failing-item-2", item2)
+            sample("failing-item-2", item2),
+            sample("3-level-nested-structure", Level1.Level2.Level3)
           )
         }
       }
