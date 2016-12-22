@@ -7,6 +7,8 @@ object Dependencies {
   val jsonLenses    = "net.virtual-void"   %% "json-lenses"      % "0.6.1"
   val scalatest     = "org.scalatest"      %% "scalatest"        % "3.0.0"
   val base64        = "me.lessis"          %% "base64"           % "0.2.0"
+  val scalaReflect  = "org.scala-lang"      % "scala-reflect"    % "2.11.8"
+
 
   // Only used by the tests
   val sprayJsonShapeless = "com.github.fommil" %% "spray-json-shapeless" % "1.1.0"

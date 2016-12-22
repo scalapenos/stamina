@@ -1,4 +1,11 @@
 package stamina
+import scala.reflect.runtime.universe._
+
+case class PayloadEvent[E: TypeTag](payload: E) extends TypeTagged[PayloadEvent[E]]
+case class Payload1(txt: String)
+case class Payload2(value: Int)
+case object Payload3
+case class Payload4[T](list: List[T])
 
 class PersistersSpec extends StaminaSpec {
   import TestDomain._
@@ -55,6 +62,36 @@ class PersistersSpec extends StaminaSpec {
     "throw an UnrecoverableDataException when an exception occurs while deserializing" in {
       an[UnrecoverableDataException] should
         be thrownBy unpersist(Persisted("item", 1, ByteString("not an item")))
+    }
+  }
+
+  "Persist overlapping events using the TypeTagged marker interface" should {
+    val persister1 = persister[PayloadEvent[Payload1]]("payload1")
+    val persister2 = persister[PayloadEvent[Payload2]]("payload2")
+    val persister4 = persister[PayloadEvent[Payload4[_]]]("payload4")
+
+    val event1 = PayloadEvent(Payload1("test"))
+    val event2 = PayloadEvent(Payload2(123))
+    val event3 = PayloadEvent(Payload3)
+    val event4a = PayloadEvent(Payload4(List(1, 2, 3)))
+    val event4b = PayloadEvent(Payload4(List("a", "b", "c")))
+
+    val nestedPersisters = Persisters(persister1, persister2, persister4)
+    import nestedPersisters._
+
+    "Persist nested events correctly" in {
+      canPersist(event1) should be(true)
+      canPersist(event2) should be(true)
+      canPersist(event3) should be(false)
+
+      // We currently don't support tagged types with abstract parameters:
+      canPersist(event4a) should be(false)
+      canPersist(event4b) should be(false)
+    }
+
+    "correctly implement canUnpersist()" in {
+      canUnpersist(persister1.persist(event1)) should be(true)
+      canUnpersist(persister2.persist(event2)) should be(true)
     }
   }
 }

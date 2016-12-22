@@ -33,7 +33,7 @@ case class Persisters(persisters: List[Persister[_, _]]) {
 
   private def requireNoOverlappingTags() = {
     val overlappingTags = persisters.groupBy(_.tag).filter(_._2.length > 1).mapValues(_.map(_.key))
-    val warnings = overlappingTags.map { case (tag, keys) ⇒ s"""Persisters with keys ${keys.mkString("'", "', '", "'")} all persist ${tag.runtimeClass}.""" }
+    val warnings = overlappingTags.map { case (tag, keys) ⇒ s"""Persisters with keys ${keys.mkString("'", "', '", "'")} all persist ${tag}.""" }
 
     require(overlappingTags.isEmpty, s"""Overlapping persisters: ${warnings.mkString(" ")}""")
   }
