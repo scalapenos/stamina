@@ -23,19 +23,19 @@ class JsonPersisterSpec extends StaminaJsonSpec {
   "V1 persisters produced by SprayJsonPersister" should {
     "correctly persist and unpersist domain events " in {
       import v1CartCreatedPersister._
-      unpersist(persist(v1CartCreated)) should equal(v1CartCreated)
+      unpersist(currentManifest, persist(v1CartCreated)) should equal(v1CartCreated)
     }
   }
 
   "V2 persisters with migrators produced by SprayJsonPersister" should {
     "correctly persist and unpersist domain events " in {
       import v2CartCreatedPersister._
-      unpersist(persist(v2CartCreated)) should equal(v2CartCreated)
+      unpersist(currentManifest, persist(v2CartCreated)) should equal(v2CartCreated)
     }
 
     "correctly migrate and unpersist V1 domain events" in {
       val v1Persisted = v1CartCreatedPersister.persist(v1CartCreated)
-      val v2Unpersisted = v2CartCreatedPersister.unpersist(v1Persisted)
+      val v2Unpersisted = v2CartCreatedPersister.unpersist(v1CartCreatedPersister.currentManifest, v1Persisted)
 
       v2Unpersisted.cart.items.map(_.price).toSet should equal(Set(1000))
     }
@@ -44,15 +44,15 @@ class JsonPersisterSpec extends StaminaJsonSpec {
   "V3 persisters with migrators produced by SprayJsonPersister" should {
     "correctly persist and unpersist domain events " in {
       import v3CartCreatedPersister._
-      unpersist(persist(v3CartCreated)) should equal(v3CartCreated)
+      unpersist(currentManifest, persist(v3CartCreated)) should equal(v3CartCreated)
     }
 
     "correctly migrate and unpersist V1 domain events" in {
       val v1Persisted = v1CartCreatedPersister.persist(v1CartCreated)
       val v2Persisted = v2CartCreatedPersister.persist(v2CartCreated)
 
-      val v1Unpersisted = v3CartCreatedPersister.unpersist(v1Persisted)
-      val v2Unpersisted = v3CartCreatedPersister.unpersist(v2Persisted)
+      val v1Unpersisted = v3CartCreatedPersister.unpersist(v1CartCreatedPersister.currentManifest, v1Persisted)
+      val v2Unpersisted = v3CartCreatedPersister.unpersist(v2CartCreatedPersister.currentManifest, v2Persisted)
 
       v1Unpersisted.cart.items.map(_.price).toSet should equal(Set(1000))
       v2Unpersisted.timestamp should (be > 0L and be < System.currentTimeMillis)

@@ -13,19 +13,28 @@ case class Persisters(persisters: List[Persister[_, _]]) {
   requireNoOverlappingTags()
 
   def canPersist(a: AnyRef): Boolean = persisters.exists(_.canPersist(a))
-  def canUnpersist(p: Persisted): Boolean = persisters.exists(_.canUnpersist(p))
+  def canUnpersist(manifest: Manifest): Boolean = persisters.exists(_.canUnpersist(manifest))
 
   // format: OFF
+  private def persister[T <: AnyRef](anyref: T): Persister[T, _] =
+    persisters
+      .find(_.canPersist(anyref))
+      .map(_.asInstanceOf[Persister[T, _]])
+      .getOrElse(throw UnregisteredTypeException(anyref))
+
+  def manifest(anyref: AnyRef): Manifest =
+    persister(anyref).currentManifest
+
   def persist(anyref: AnyRef): Persisted = {
-    persisters.find(_.canPersist(anyref))
-              .map(_.persistAny(anyref))
-              .getOrElse(throw UnregisteredTypeException(anyref))
+    val p = persister(anyref)
+    Persisted(p.currentManifest, p.persistAny(anyref))
   }
 
-  def unpersist(persisted: Persisted): AnyRef = {
-    persisters.find(_.canUnpersist(persisted))
-              .map(_.unpersistAny(persisted))
-              .getOrElse(throw UnsupportedDataException(persisted))
+  def unpersist(persisted: Persisted): AnyRef = unpersist(persisted.bytes, persisted.manifest)
+  def unpersist(payload: Array[Byte], manifest: Manifest): AnyRef = {
+    persisters.find(_.canUnpersist(manifest))
+              .map(_.unpersistAny(manifest, payload))
+              .getOrElse(throw UnsupportedDataException(manifest.key, manifest.version))
   }
   // format: ON
 

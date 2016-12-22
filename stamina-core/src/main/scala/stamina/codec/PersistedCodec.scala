@@ -1,4 +1,5 @@
 package stamina
+package codec
 
 /**
  * The encoding used to translate an instance of <code>Persisted</code>
@@ -33,7 +34,7 @@ object DefaultPersistedCodec extends PersistedCodec {
       putInt(keyBytes.length).
       putBytes(keyBytes).
       putInt(persisted.version).
-      append(persisted.bytes).
+      append(ByteString(persisted.bytes)).
       result.
       toArray
   }
