@@ -8,12 +8,12 @@ class JsonPersisterSpec extends StaminaJsonSpec {
 
   val v1CartCreatedPersister = persister[CartCreatedV1]("cart-created")
 
-  val v2CartCreatedPersister = persister[CartCreatedV2, V2](
+  val v2CartCreatedPersister = persisterVn[CartCreatedV2, V2](
     "cart-created",
     from[V1].to[V2](_.update('cart / 'items / * / 'price ! set[Int](1000)))
   )
 
-  val v3CartCreatedPersister = persister[CartCreatedV3, V3](
+  val v3CartCreatedPersister = persisterVn[CartCreatedV3, V3](
     "cart-created",
     from[V1]
       .to[V2](_.update('cart / 'items / * / 'price ! set[Int](1000)))
