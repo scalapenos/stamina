@@ -58,7 +58,8 @@ object Build extends Build {
       ) ++
       test(
         scalatest,
-        sprayJsonShapeless
+        sprayJsonShapeless,
+        logback
       )
     )
 
