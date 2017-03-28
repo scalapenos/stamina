@@ -1,6 +1,9 @@
 package stamina
 package testkit
 
+import java.nio.charset.StandardCharsets
+import java.util.Base64
+
 import scala.util._
 
 trait StaminaTestKit { self: org.scalatest.WordSpecLike ⇒
@@ -59,12 +62,9 @@ trait StaminaTestKit { self: org.scalatest.WordSpecLike ⇒
       }
     }
 
-    implicit def eitherToTry[B](either: Either[base64.Decode.Failure, B]): Try[B] = {
-      either match {
-        case Right(obj) ⇒ Success(obj)
-        case Left(err)  ⇒ Failure(new IllegalArgumentException(err.toString))
-      }
-    }
+    private def decodeBase64(s: String): Try[Array[Byte]] = Try(Base64.getDecoder.decode(s.getBytes(StandardCharsets.UTF_8)))
+
+    private def encodeBase64(bytes: Array[Byte]): Array[Byte] = Base64.getEncoder.encode(bytes)
 
     private def byteStringFromResource(key: String, version: Int, sampleId: String): Try[Persisted] = {
       import scala.io.Source
@@ -73,7 +73,7 @@ trait StaminaTestKit { self: org.scalatest.WordSpecLike ⇒
       Option(this.getClass.getResourceAsStream(resourceName))
         .map(Success(_)).getOrElse(Failure(new java.io.FileNotFoundException(resourceName)))
         .map(Source.fromInputStream(_).mkString)
-        .flatMap(base64.Decode(_))
+        .flatMap(decodeBase64)
         .map(akka.util.ByteString(_))
         .map(Persisted(key, version, _))
     }
@@ -81,7 +81,7 @@ trait StaminaTestKit { self: org.scalatest.WordSpecLike ⇒
     private def saveByteArrayToTargetSerializationDirectory(bytes: Array[Byte], key: String, version: Int, sampleId: String) = {
       import java.nio.file._
       val path = Paths.get(targetDirectoryForExampleSerializations, filename(key, version, sampleId))
-      Files.write(path, base64.Encode(bytes), StandardOpenOption.TRUNCATE_EXISTING)
+      Files.write(path, encodeBase64(bytes), StandardOpenOption.TRUNCATE_EXISTING)
       path.toAbsolutePath
     }
 
