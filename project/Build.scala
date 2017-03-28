@@ -68,8 +68,7 @@ object Build extends Build {
     .settings(libSettings: _*)
     .settings(libraryDependencies ++=
       compile(
-        scalatest,
-        base64
+        scalatest
       )
     )
 }
