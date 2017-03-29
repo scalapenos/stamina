@@ -9,16 +9,19 @@ import scala.util._
 trait StaminaTestKit { self: org.scalatest.WordSpecLike ⇒
 
   val defaultSampleId = "default"
-  case class PersistableSample(sampleId: String, persistable: AnyRef, description: Option[String]) {
+  case class PersistableSample[FromVersion <: Version: VersionInfo](sampleId: String, persistable: AnyRef, description: Option[String]) {
     override def toString = SimpleClassNameExtractor(persistable.getClass) + description.map(" " + _).getOrElse("")
+    val fromVersionNumber = implicitly[VersionInfo[FromVersion]].versionNumber
+
+    def from[NewFromVersion <: Version: VersionInfo] = PersistableSample[NewFromVersion](sampleId, persistable, description)
   }
 
-  def sample(persistable: AnyRef) = new PersistableSample(defaultSampleId, persistable, None)
-  def sample(sampleId: String, persistable: AnyRef) = new PersistableSample(sampleId, persistable, Some(sampleId))
-  def sample(sampleId: String, persistable: AnyRef, description: String) = new PersistableSample(sampleId, persistable, Some(description))
+  def sample(persistable: AnyRef) = new PersistableSample[V1](defaultSampleId, persistable, None)
+  def sample(sampleId: String, persistable: AnyRef) = new PersistableSample[V1](sampleId, persistable, Some(sampleId))
+  def sample(sampleId: String, persistable: AnyRef, description: String) = new PersistableSample[V1](sampleId, persistable, Some(description))
 
   implicit class TestablePersisters(persisters: Persisters) extends org.scalatest.Matchers {
-    def generateTestsFor(samples: PersistableSample*): Unit = {
+    def generateTestsFor(samples: PersistableSample[_]*): Unit = {
       samples.foreach { sample ⇒
         generateRoundtripTestFor(sample)
         generateStoredVersionsDeserializationTestsFor(sample)
@@ -26,15 +29,15 @@ trait StaminaTestKit { self: org.scalatest.WordSpecLike ⇒
       // Here we could verify test coverage
     }
 
-    private def generateRoundtripTestFor(sample: PersistableSample) = {
+    private def generateRoundtripTestFor(sample: PersistableSample[_]) = {
       s"persist and unpersist $sample" in {
         persisters.unpersist(persisters.persist(sample.persistable)) should equal(sample.persistable)
       }
     }
 
-    private def generateStoredVersionsDeserializationTestsFor(sample: PersistableSample, fromVersion: Int = 1): Unit = {
+    private def generateStoredVersionsDeserializationTestsFor(sample: PersistableSample[_]): Unit = {
       latestVersion(sample.persistable).map(latestVersion ⇒
-        Range.inclusive(fromVersion, latestVersion).foreach { version ⇒
+        Range.inclusive(sample.fromVersionNumber, latestVersion).foreach { version ⇒
           s"deserialize the stored serialized form of $sample version $version" in {
             verifyByteStringDeserialization(sample, version, latestVersion)
           }
@@ -43,7 +46,7 @@ trait StaminaTestKit { self: org.scalatest.WordSpecLike ⇒
 
     def latestVersion(persistable: AnyRef) = Try(persisters.persisters.filter(_.canPersist(persistable)).map(_.currentVersion).max).toOption
 
-    private def verifyByteStringDeserialization(sample: PersistableSample, version: Int, latestVersion: Int): Unit = {
+    private def verifyByteStringDeserialization(sample: PersistableSample[_], version: Int, latestVersion: Int): Unit = {
       val serialized = persisters.persist(sample.persistable)
       byteStringFromResource(serialized.key, version, sample.sampleId) match {
         case Success(binary) ⇒
