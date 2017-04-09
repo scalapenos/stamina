@@ -6,3 +6,4 @@ Releasing:
 * sbt sonatypeRelease
 * bump version to next '-SNAPSHOT' in project/Build.scala
 * update README.md to recommend getting the newly released version
+* 'git push'
