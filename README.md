@@ -1,6 +1,6 @@
 
 [![Build Status](https://img.shields.io/travis/scalapenos/stamina.svg)](https://travis-ci.org/scalapenos/stamina)
-[![Latest version](https://index.scala-lang.org/scalapenos/scalapenos/stamina/latest.svg)](https://index.scala-lang.org/scalapenos/stamina)
+[![Latest version](https://index.scala-lang.org/scalapenos/stamina/stamina/latest.svg)](https://index.scala-lang.org/scalapenos/stamina/stamina)
 ![License](https://img.shields.io/badge/license-MIT-blue.svg "License: MIT")
 
 Stamina is an Akka serialization toolkit written specifically for use with Akka Persistence.
