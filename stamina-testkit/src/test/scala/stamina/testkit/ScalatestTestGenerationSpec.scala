@@ -1,6 +1,8 @@
 package stamina
 package testkit
 
+import java.io.File
+
 import org.scalatest._
 import org.scalatest.events._
 import org.scalatest.matchers.{BePropertyMatchResult, BePropertyMatcher}
@@ -55,6 +57,12 @@ class ScalatestTestGenerationSpec extends StaminaTestKitSpec {
         val myRep = execSpec(spec)
         val Some(res) = myRep.findResultEvent("TestDomainSerialization should deserialize the stored serialized form of Item failing-item-2 version 1")
         res should be(anInstanceOf[TestFailed])
+      }
+
+      "creates missing sample file in /tmp directory for the newest version" in {
+        val myRep = execSpec(spec)
+        myRep.testFailedEventsReceived.find(_.message.startsWith("You appear to have added a new serialization sample to the stamina persisters' test")).value
+        new File(System.getProperty("java.io.tmpdir"), "/item1-v2-default") should exist
       }
     }
 
