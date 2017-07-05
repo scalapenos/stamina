@@ -45,13 +45,22 @@ package object json {
    * and unpersist version 1. Use this function to produce the initial persister
    * for a new domain class/event/entity.
    */
-  def persister[T: RootJsonFormat: ClassTag](key: String): JsonPersister[T, V1] = new V1JsonPersister[T](key)
+  def persister[T: RootJsonFormat: ClassTag](key: String): JsonPersister[T, V1] = new V1JsonPersister[T](key, from[V1])
+
+  /**
+   * Creates a JsonPersister[T, V1], i.e. a JsonPersister that will only persist
+   * version 1 and can unpersist from both versions 1 and 2.
+   * Provided Migrator should be able to migrate values from version 2 back to
+   * version 1, it can be achieved by defining it like
+   * `from[V1].backFrom[V2](identity)`.
+   */
+  def persister[T: RootJsonFormat: ClassTag](key: String, migrator: JsonMigrator[V1]): JsonPersister[T, V1] = new V1JsonPersister[T](key, migrator)
 
   /**
    * Creates a JsonPersister[T, V] where V is a version greater than V1.
    * It will always persist instances of T to version V but it will use the specified
-   * JsonMigrator[V] to migrate any values older than version V to version V before
-   * unpersisting them.
+   * JsonMigrator[V] to migrate any values older or or one generation younger
+   * than version V to version V before unpersisting them.
    */
   def persister[T: RootJsonFormat: ClassTag, V <: Version: VersionInfo: MigratableVersion](key: String, migrator: JsonMigrator[V]): JsonPersister[T, V] = new VnJsonPersister[T, V](key, migrator)
 
@@ -69,7 +78,9 @@ package json {
       s"""JsonPersister[${implicitly[ClassTag[T]].runtimeClass.getSimpleName}, V${currentVersion}](key = "${key}") cannot unpersist data with key "${p.key}" and version ${p.version}."""
   }
 
-  private[json] class V1JsonPersister[T: RootJsonFormat: ClassTag](key: String) extends JsonPersister[T, V1](key) {
+  private[json] class V1JsonPersister[T: RootJsonFormat: ClassTag](key: String, migrator: JsonMigrator[V1]) extends JsonPersister[T, V1](key) {
+    override def canUnpersist(p: Persisted): Boolean = p.key == key && migrator.canMigrate(p.version)
+
     def persist(t: T): Persisted = Persisted(key, currentVersion, toJsonBytes(t))
     def unpersist(p: Persisted): T = {
       if (canUnpersist(p)) fromJsonBytes[T](p.bytes)

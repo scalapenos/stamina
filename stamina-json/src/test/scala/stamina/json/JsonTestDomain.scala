@@ -42,4 +42,17 @@ object JsonTestDomain {
   val v3Item2 = ItemV3(2, "Everlasting Gobstopper", 489)
   val v3Cart = CartV3(1, List(v3Item1, v3Item2))
   val v3CartCreated = CartCreatedV3(v3Cart, System.currentTimeMillis)
+
+  // ==========================================================================
+  // V4
+  // ==========================================================================
+
+  case class ItemV4(id: ItemId, name: Option[String], price: Int)
+  case class CartV4(id: CartId, items: List[ItemV4])
+  case class CartCreatedV4(cart: CartV4, timestamp: Long)
+
+  val v4Item1 = ItemV4(1, Some("Wonka Bar"), 500)
+  val v4Item2 = ItemV4(2, None, 489)
+  val v4Cart = CartV4(1, List(v4Item1, v4Item2))
+  val v4CartCreated = CartCreatedV4(v4Cart, System.currentTimeMillis)
 }
