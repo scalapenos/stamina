@@ -12,21 +12,11 @@ package object migrations {
   def identityMigration[T]: Migration[T] = identity[T]
 
   /**
-   * Adds support for combining two instances of Migration[T] into a new
-   * Migration[T] that will apply the first one and then the second one.
-   */
-  implicit class MigrationWithComposition[T](val firstMigration: Migration[T]) extends AnyVal {
-    def &&(secondMigration: Migration[T]): Migration[T] = {
-      (value: T) ⇒ secondMigration(firstMigration(value))
-    }
-  }
-
-  /**
    * Creates a Migrator[T, V1] that can function as a builder for
    * creating Migrator[T, V2], etc. Its migration will be the identity
    * function so calling its migrate function will not have any effect.
    */
-  def from[T, V <: V1: VersionInfo]: Migrator[T, V] = new Migrator[T, V](Map(Version.numberFor[V] → identityMigration[T]))
+  def from[T, V <: V1: VersionInfo]: Migrator[T, V] = new Migrator[T, V](Map(Version.numberFor[V] → identityMigration[T]), Map.empty)
 }
 
 package migrations {
@@ -35,8 +25,8 @@ package migrations {
     extends RuntimeException(s"No migration defined from version ${fromVersion} to version ${toVersion}.")
 
   /**
-   * A `Migrator[R, V]` can migrate raw values of type R from older
-   * versions to version `V` by applying a specific `Migration[R]` to it.
+   * A `Migrator[R, V]` can migrate raw values of type R between
+   * two versions by applying all `Migration[R]`s between these versions.
    *
    * You can create instances of `Migrator[R, V]` by using
    * a small type-safe DSL consisting of two parts: the
@@ -55,20 +45,36 @@ package migrations {
    * }}}
    *
    *  @tparam R The type of raw data being migrated. In the JSON implementation this would be `JsValue`.
-   *  @tparam V The "current" version of this Migrator, i.e. it can migrate values from V1 to this version or any version in between.
+   *  @tparam V The "current" version of this Migrator.
    */
-  class Migrator[R, V <: Version: VersionInfo] private[stamina] (migrations: Map[Int, Migration[R]] = Map.empty) {
-    def canMigrate(fromVersion: Int): Boolean = migrations.contains(fromVersion)
+  class Migrator[R, V <: Version: VersionInfo] private[stamina] (forwardMigrations: Map[Int, Migration[R]] = Map.empty, backwardMigrations: Map[Int, Migration[R]] = Map.empty) {
+    def canMigrate(fromVersion: Int, toVersion: Int): Boolean = forwardMigrations.contains(fromVersion) && forwardMigrations.contains(toVersion)
 
-    def migrate(value: R, fromVersion: Int): R = {
-      migrations.get(fromVersion).map(_.apply(value)).getOrElse(
-        throw UndefinedMigrationException(fromVersion, Version.numberFor[V])
-      )
+    def migrate(value: R, fromVersion: Int, toVersion: Int): R = {
+      def applyMigrationOn(value: R, migration: Migration[R]) = migration(value)
+
+      if (fromVersion <= toVersion) {
+        (fromVersion to toVersion).drop(1)
+          .map(version ⇒ forwardMigrations.getOrElse(version, throw UndefinedMigrationException(fromVersion, toVersion)))
+          .foldLeft(value)(applyMigrationOn)
+      } else {
+        (toVersion to fromVersion).drop(1).reverse
+          .flatMap(backwardMigrations.get)
+          .foldLeft(value)(applyMigrationOn)
+      }
     }
 
     def to[NextV <: Version: VersionInfo](migration: Migration[R])(implicit isNextAfter: IsNextVersionAfter[NextV, V]) = {
       new Migrator[R, NextV](
-        migrations.mapValues(_ && migration) + (Version.numberFor[NextV] → identityMigration[R])
+        forwardMigrations + (Version.numberFor[NextV] → migration),
+        backwardMigrations
+      )
+    }
+
+    def backTo[PrevV <: Version: VersionInfo](migration: Migration[R])(implicit e: IsNextVersionAfter[V, PrevV]) = {
+      new Migrator[R, V](
+        forwardMigrations,
+        backwardMigrations + (Version.numberFor[V] → migration)
       )
     }
   }
