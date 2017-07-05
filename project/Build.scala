@@ -54,10 +54,10 @@ object Build extends Build {
     .settings(libSettings: _*)
     .settings(libraryDependencies ++=
       compile(
-        sprayJson,
-        jsonLenses
+        sprayJson
       ) ++
       test(
+        jsonLenses,
         scalatest,
         sprayJsonShapeless
       )
