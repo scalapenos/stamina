@@ -6,8 +6,7 @@ import scalariform.formatter.preferences._
 object Formatting {
   lazy val formattingSettings = SbtScalariform.scalariformSettings ++ Seq(
     ScalariformKeys.preferences in Compile := formattingPreferences,
-    ScalariformKeys.preferences in Test    := formattingPreferences
-  )
+    ScalariformKeys.preferences in Test := formattingPreferences)
 
   private def formattingPreferences =
     FormattingPreferences()

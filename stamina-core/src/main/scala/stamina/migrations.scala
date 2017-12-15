@@ -62,14 +62,12 @@ package migrations {
 
     def migrate(value: R, fromVersion: Int): R = {
       migrations.get(fromVersion).map(_.apply(value)).getOrElse(
-        throw UndefinedMigrationException(fromVersion, Version.numberFor[V])
-      )
+        throw UndefinedMigrationException(fromVersion, Version.numberFor[V]))
     }
 
     def to[NextV <: Version: VersionInfo](migration: Migration[R])(implicit isNextAfter: IsNextVersionAfter[NextV, V]) = {
       new Migrator[R, NextV](
-        migrations.mapValues(_ && migration) + (Version.numberFor[NextV] → identityMigration[R])
-      )
+        migrations.mapValues(_ && migration) + (Version.numberFor[NextV] → identityMigration[R]))
     }
   }
 }

@@ -5,7 +5,7 @@ import java.io.File
 
 import org.scalatest._
 import org.scalatest.events._
-import org.scalatest.matchers.{BePropertyMatchResult, BePropertyMatcher}
+import org.scalatest.matchers.{ BePropertyMatchResult, BePropertyMatcher }
 
 import scala.reflect.ClassTag
 
@@ -26,8 +26,7 @@ class ScalatestTestGenerationSpec extends StaminaTestKitSpec {
           persisters.generateTestsFor(
             sample(item1),
             sample("failing-item-2", item2),
-            sample("3-level-nested-structure", Level1.Level2.Level3)
-          )
+            sample("3-level-nested-structure", Level1.Level2.Level3))
         }
       }
 
@@ -71,8 +70,7 @@ class ScalatestTestGenerationSpec extends StaminaTestKitSpec {
         val persisters = Persisters(ItemPersister("item2"))
         "TestDomainSerialization" should {
           persisters.generateTestsFor(
-            sample(item2).from[V2]
-          )
+            sample(item2).from[V2])
         }
       }
 
@@ -92,8 +90,7 @@ class ScalatestTestGenerationSpec extends StaminaTestKitSpec {
         val persisters = Persisters(ItemPersister("item1"))
         "TestDomainSerialization" should {
           persisters.generateTestsFor(
-            sample(item1)
-          )
+            sample(item1))
         }
       }
 
