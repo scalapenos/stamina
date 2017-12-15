@@ -18,12 +18,9 @@ object Publishing {
         username ← sys.env.get("SONATYPE_USERNAME")
         password ← sys.env.get("SONATYPE_PASSWORD")
       } yield Credentials("Sonatype Nexus Repository Manager", "oss.sonatype.org", username, password)).toSeq,
+
     pomExtra := (
-      <url>https://github.com/scalapenos/stamina#readme</url>
-      <scm>
-        <url>git@github.com:scalapenos/stamina.git</url>
-        <connection>scm:git@github.com:scalapenos/stamina.git</connection>
-      </scm>
+      <url>https://github.com/scalapenos/stamina</url>
       <developers>
         <developer>
           <id>agemooij</id>
