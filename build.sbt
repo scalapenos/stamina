@@ -3,7 +3,7 @@ import Publishing._
 
 lazy val basicSettings = Seq(
   organization := "com.scalapenos",
-  version := "0.1.4-SNAPSHOT",
+  version := "0.1.5-SNAPSHOT",
   licenses := Seq("The MIT License (MIT)" -> url("http://opensource.org/licenses/MIT")),
   scalaVersion := "2.12.4",
   crossScalaVersions := Seq("2.11.11", "2.12.4"),

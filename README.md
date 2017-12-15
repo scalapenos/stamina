@@ -16,36 +16,15 @@ We are still finishing up the last open ends before we release a public version 
 ## Current status
 Stamina is currently available in pre-release SNAPSHOT form. This means that we don't recommend using Stamina in production since the APIs could still change significantly and break your stuff.
 
-To use the latest SNAPSHOT release, configure your SBT build like this:
-
-```
-resolvers += "Sonatype Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots/"
-
-libraryDependencies += "com.scalapenos" %% "stamina-json" % "0.1.3"
-```
-
 [stamina-core](stamina-core) and [stamina-json](stamina-json) are pretty much ready and we are happy with the API that has evolved out of the many experiments we have done over the last year. We **are** looking at the new Akka 2.4.x event adapters to see whether integration with akka can be improved using them.
 
 [stamina-testkit](stamina-testkit) is also mostly finished. It can be used to generate scalatest tests for your stamina persisters, keeping serialized older versions of your data around to make sure you don't accidentally break compatibility.
-
-Our final task before releasing a public beta is to create a *stamina-sample-app* to show Stamina in action on a representative project.
 
 ## Adding Stamina to your project
 Stamina is available via [Maven Central](https://search.maven.org/), simply add it to your SBT build:
 
 ```scala
-libraryDependencies += "com.scalapenos" %% "stamina-json" % "0.1.2"
-```
-
-If you want to use a development snapshots, use the 
-[Sonatype Snapshot Repository](https://oss.sonatype.org/content/repositories/snapshots/com/scalapenos/). Add the
-following lines to your SBT build:
-```scala
-resolvers ++= Seq(
-  "Sonatype Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots/"
-)
-
-libraryDependencies += "com.scalapenos" %% "stamina-json" % "0.1.2"
+libraryDependencies += "com.scalapenos" %% "stamina-json" % "0.1.4"
 ```
 
 # Stamina in Detail
@@ -66,9 +45,12 @@ The first (and currently only) implementation is based on spray-json. It support
 //
 // Normally, of course, you would only need one case class,
 // which would always represent the current version (V3 in this case).
-import fommil.sjs.FamilyFormats._ // For this example's ease, auto-generated json formats are used here
 import spray.json.lenses.JsonLenses._
 import stamina.json._
+
+// For this example, we auto-generated json formats from spray-json-shapeless
+// This is not a requirement and you can use explicit formats too.
+import fommil.sjs.FamilyFormats._
 
 // spray-json persister for V1.
 // Essentially equivalent to any existing Akka serializer except
