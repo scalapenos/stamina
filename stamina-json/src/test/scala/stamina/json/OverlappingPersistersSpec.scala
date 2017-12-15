@@ -20,8 +20,7 @@ class OverlappingPersisterSpec extends StaminaJsonSpec {
       val e = intercept[IllegalArgumentException] {
         Persisters(
           persister[Event[Payload1]]("payload1"),
-          persister[Event[Payload2]]("payload2")
-        )
+          persister[Event[Payload2]]("payload2"))
       }
       e.getMessage() should be("requirement failed: Overlapping persisters: Persisters with keys 'payload1', 'payload2' all persist class stamina.json.OverlappingPersisterSpecDomain$Event.")
 

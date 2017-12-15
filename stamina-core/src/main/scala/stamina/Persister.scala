@@ -25,9 +25,7 @@ abstract class Persister[T: ClassTag, V <: Version: VersionInfo](val key: String
   private[stamina] def persistAny(any: AnyRef): Persisted = {
     convertToT(any).map(persist(_)).getOrElse(
       throw new IllegalArgumentException(
-        s"persistAny() was called on Persister[${implicitly[ClassTag[T]].runtimeClass}] with an instance of ${any.getClass}."
-      )
-    )
+        s"persistAny() was called on Persister[${implicitly[ClassTag[T]].runtimeClass}] with an instance of ${any.getClass}."))
   }
 
   private[stamina] def unpersistAny(persisted: Persisted): AnyRef = {
