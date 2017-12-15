@@ -52,10 +52,10 @@ lazy val json = Project("stamina-json", file("stamina-json"))
   .settings(libraryDependencies ++=
     compileDeps(
       sprayJson,
-      jsonLenses
     ) ++
     testDeps(
       scalatest,
+      jsonLenses,
       sprayJsonShapeless
     )
   )
