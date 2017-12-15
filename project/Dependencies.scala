@@ -10,7 +10,7 @@ object Dependencies {
   // format: ON
 
   // Only used by the tests
-  val sprayJsonShapeless = "com.github.fommil" %% "spray-json-shapeless" % "1.3.0"
+  val sprayJsonShapeless = "com.github.fommil" %% "spray-json-shapeless" % "1.4.0"
 
   // Dependency scoping functions
   def compileDeps(deps: ModuleID*): Seq[ModuleID] = deps map (_ % "compile")

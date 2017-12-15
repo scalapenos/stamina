@@ -1,5 +1,4 @@
 import Dependencies._
-import Formatting._
 import Publishing._
 
 lazy val basicSettings = Seq(
@@ -22,9 +21,10 @@ lazy val basicSettings = Seq(
   )
 )
 
-lazy val libSettings = basicSettings ++ formattingSettings ++ publishingSettings
+lazy val libSettings = basicSettings ++ publishingSettings
 
 lazy val root = Project("stamina", file("."))
+  .enablePlugins(FormattingPlugin)
   .settings(basicSettings: _*)
   .settings(publishingSettings: _*)
   .aggregate(
@@ -34,6 +34,7 @@ lazy val root = Project("stamina", file("."))
   )
 
 lazy val core = Project("stamina-core", file("stamina-core"))
+  .enablePlugins(FormattingPlugin)
   .settings(libSettings: _*)
   .settings(libraryDependencies ++=
     compileDeps(
@@ -45,6 +46,7 @@ lazy val core = Project("stamina-core", file("stamina-core"))
   )
 
 lazy val json = Project("stamina-json", file("stamina-json"))
+  .enablePlugins(FormattingPlugin)
   .dependsOn(core)
   .settings(libSettings: _*)
   .settings(libraryDependencies ++=
@@ -59,6 +61,7 @@ lazy val json = Project("stamina-json", file("stamina-json"))
   )
 
 lazy val testkit = Project("stamina-testkit", file("stamina-testkit"))
+  .enablePlugins(FormattingPlugin)
   .dependsOn(core)
   .settings(libSettings: _*)
   .settings(libraryDependencies ++=

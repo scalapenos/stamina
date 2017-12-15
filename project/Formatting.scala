@@ -1,18 +1,23 @@
 import sbt._
+import sbt.Keys._
+
 import com.typesafe.sbt.SbtScalariform
 import com.typesafe.sbt.SbtScalariform.ScalariformKeys
 import scalariform.formatter.preferences._
 
-object Formatting {
-  lazy val formattingSettings = SbtScalariform.scalariformSettings ++ Seq(
-    ScalariformKeys.preferences in Compile := formattingPreferences,
-    ScalariformKeys.preferences in Test := formattingPreferences)
-
-  private def formattingPreferences =
-    FormattingPreferences()
-      .setPreference(AlignParameters, false)
-      .setPreference(AlignSingleLineCaseStatements, true)
-      .setPreference(AlignSingleLineCaseStatements.MaxArrowIndent, 90)
-      .setPreference(DoubleIndentClassDeclaration, true)
-      .setPreference(RewriteArrowSymbols, true)
+object FormattingPlugin extends AutoPlugin {
+  override def trigger = allRequirements
+  override def requires = SbtScalariform
+  override def projectSettings =
+    Seq(
+      ScalariformKeys.preferences := ScalariformKeys.preferences.value
+        .setPreference(AlignParameters, false)
+        .setPreference(AlignSingleLineCaseStatements, true)
+        .setPreference(AlignSingleLineCaseStatements.MaxArrowIndent, 90)
+        .setPreference(DoubleIndentConstructorArguments, true)
+        .setPreference(DoubleIndentMethodDeclaration, true)
+        .setPreference(RewriteArrowSymbols, true)
+        .setPreference(DanglingCloseParenthesis, Preserve)
+        .setPreference(NewlineAtEndOfFile, true)
+    )
 }
