@@ -32,6 +32,7 @@ lazy val root = Project("stamina", file("."))
     json,
     testkit
   )
+  .enablePlugins(ReproducibleBuildsPlugin)
 
 lazy val core = Project("stamina-core", file("stamina-core"))
   .enablePlugins(FormattingPlugin)
@@ -44,6 +45,7 @@ lazy val core = Project("stamina-core", file("stamina-core"))
       scalatest
     )
   )
+  .enablePlugins(ReproducibleBuildsPlugin)
 
 lazy val json = Project("stamina-json", file("stamina-json"))
   .enablePlugins(FormattingPlugin)
@@ -59,6 +61,7 @@ lazy val json = Project("stamina-json", file("stamina-json"))
       sprayJsonShapeless
     )
   )
+  .enablePlugins(ReproducibleBuildsPlugin)
 
 lazy val testkit = Project("stamina-testkit", file("stamina-testkit"))
   .enablePlugins(FormattingPlugin)
@@ -69,3 +72,4 @@ lazy val testkit = Project("stamina-testkit", file("stamina-testkit"))
       scalatest
     )
   )
+  .enablePlugins(ReproducibleBuildsPlugin)
