@@ -18,8 +18,8 @@ abstract class Persister[T: ClassTag, V <: Version: VersionInfo](val key: String
   def canUnpersist(p: Persisted): Boolean = p.key == key && p.version <= currentVersion
 
   private[stamina] def convertToT(any: AnyRef): Option[T] = any match {
-    case t: T ⇒ Some(t)
-    case _    ⇒ None
+    case t: T => Some(t)
+    case _    => None
   }
 
   private[stamina] def persistAny(any: AnyRef): Persisted = {
@@ -30,8 +30,8 @@ abstract class Persister[T: ClassTag, V <: Version: VersionInfo](val key: String
 
   private[stamina] def unpersistAny(persisted: Persisted): AnyRef = {
     Try(unpersist(persisted).asInstanceOf[AnyRef]) match {
-      case Success(anyref) ⇒ anyref
-      case Failure(error)  ⇒ throw UnrecoverableDataException(persisted, error)
+      case Success(anyref) => anyref
+      case Failure(error)  => throw UnrecoverableDataException(persisted, error)
     }
   }
 

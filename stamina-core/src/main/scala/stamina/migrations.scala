@@ -6,7 +6,7 @@ package object migrations {
    * and produces another T, usually the input value transformed in some way
    * in order to make it compatible with a higher version.
    */
-  type Migration[T] = T ⇒ T
+  type Migration[T] = T => T
 
   /** The identity Migration will always return its input as its output. */
   def identityMigration[T]: Migration[T] = identity[T]
@@ -16,8 +16,8 @@ package object migrations {
    * Migration[T] that will apply the first one and then the second one.
    */
   implicit class MigrationWithComposition[T](val firstMigration: Migration[T]) extends AnyVal {
-    def &&(secondMigration: Migration[T]): Migration[T] = {
-      (value: T) ⇒ secondMigration(firstMigration(value))
+    def &&(secondMigration: Migration[T]): Migration[T] = { value: T =>
+      secondMigration(firstMigration(value))
     }
   }
 
@@ -26,10 +26,11 @@ package object migrations {
    * creating Migrator[T, V2], etc. Its migration will be the identity
    * function so calling its migrate function will not have any effect.
    */
-  def from[T, V <: V1: VersionInfo]: Migrator[T, V] = new Migrator[T, V](Map(Version.numberFor[V] → identityMigration[T]))
+  def from[T, V <: V1: VersionInfo]: Migrator[T, V] = new Migrator[T, V](Map(Version.numberFor[V] -> identityMigration[T]))
 }
 
 package migrations {
+
   /** Runtime exception for signalling that the specified migration path is not supported. */
   case class UndefinedMigrationException(fromVersion: Int, toVersion: Int)
     extends RuntimeException(s"No migration defined from version ${fromVersion} to version ${toVersion}.")
@@ -65,9 +66,12 @@ package migrations {
         throw UndefinedMigrationException(fromVersion, Version.numberFor[V]))
     }
 
-    def to[NextV <: Version: VersionInfo](migration: Migration[R])(implicit isNextAfter: IsNextVersionAfter[NextV, V]) = {
+    def to[NextV <: Version: VersionInfo](migration: Migration[R])(implicit isNextAfter: IsNextVersionAfter[NextV, V]): Migrator[R, NextV] = {
       new Migrator[R, NextV](
-        migrations.mapValues(_ && migration) + (Version.numberFor[NextV] → identityMigration[R]))
+        migrations.map {
+          case (key, currentMigration: Migration[R]) =>
+            (key, currentMigration && migration)
+        } + (Version.numberFor[NextV] -> identityMigration[R]))
     }
   }
 }

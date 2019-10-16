@@ -6,7 +6,7 @@ import java.util.Base64
 
 import scala.util._
 
-trait StaminaTestKit { self: org.scalatest.WordSpecLike ⇒
+trait StaminaTestKit { self: org.scalatest.WordSpecLike =>
 
   val defaultSampleId = "default"
   case class PersistableSample[FromVersion <: Version: VersionInfo](sampleId: String, persistable: AnyRef, description: Option[String]) {
@@ -22,7 +22,7 @@ trait StaminaTestKit { self: org.scalatest.WordSpecLike ⇒
 
   implicit class TestablePersisters(persisters: Persisters) extends org.scalatest.Matchers {
     def generateTestsFor(samples: PersistableSample[_]*): Unit = {
-      samples.foreach { sample ⇒
+      samples.foreach { sample =>
         generateRoundtripTestFor(sample)
         generateStoredVersionsDeserializationTestsFor(sample)
       }
@@ -36,8 +36,8 @@ trait StaminaTestKit { self: org.scalatest.WordSpecLike ⇒
     }
 
     private def generateStoredVersionsDeserializationTestsFor(sample: PersistableSample[_]): Unit = {
-      latestVersion(sample.persistable).map(latestVersion ⇒
-        Range.inclusive(sample.fromVersionNumber, latestVersion).foreach { version ⇒
+      latestVersion(sample.persistable).map(latestVersion =>
+        Range.inclusive(sample.fromVersionNumber, latestVersion).foreach { version =>
           s"deserialize the stored serialized form of $sample version $version" in {
             verifyByteStringDeserialization(sample, version, latestVersion)
           }
@@ -49,18 +49,18 @@ trait StaminaTestKit { self: org.scalatest.WordSpecLike ⇒
     private def verifyByteStringDeserialization(sample: PersistableSample[_], version: Int, latestVersion: Int): Unit = {
       val serialized = persisters.persist(sample.persistable)
       byteStringFromResource(serialized.key, version, sample.sampleId) match {
-        case Success(binary) ⇒
+        case Success(binary) =>
           persisters.unpersist(binary) should equal(sample.persistable)
-        case Failure(_: java.io.FileNotFoundException) if version == latestVersion ⇒
+        case Failure(_: java.io.FileNotFoundException) if version == latestVersion =>
           val writtenToPath = saveByteArrayToTargetSerializationDirectory(serialized.bytes.toArray, serialized.key, version, sample.sampleId)
           fail(s"You appear to have added a new serialization sample to the stamina persisters' test.\n" +
             "A serialized version of this sample must be stored as a project resource for future reference, to ensure future versions of the software can still correctly deserialize serialized objects in this format.\n" +
             "Please copy the generated serialized data into the project test resources:\n" +
             s"  cp $writtenToPath $$PROJECT_PATH/src/test/resources/$serializedObjectsPackage")
 
-        case Failure(_: java.io.FileNotFoundException) if version < latestVersion ⇒
+        case Failure(_: java.io.FileNotFoundException) if version < latestVersion =>
           fail(s"While testing that the older serialized version $version of sample with key ${serialized.key} and sample id ${sample.sampleId} was not found")
-        case Failure(other) ⇒
+        case Failure(other) =>
           fail(s"Failure while decoding serialized version $version of sample with key ${serialized.key} and sample id ${sample.sampleId} was not found", other)
       }
     }
