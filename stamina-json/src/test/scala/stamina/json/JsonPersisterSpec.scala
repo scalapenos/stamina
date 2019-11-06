@@ -4,19 +4,22 @@ package json
 class JsonPersisterSpec extends StaminaJsonSpec {
   import JsonTestDomain._
   import spray.json.lenses.JsonLenses._
-  import fommil.sjs.FamilyFormats._
+  import spray.json.DefaultJsonProtocol._
 
-  val v1CartCreatedPersister = persister[CartCreatedV1]("cart-created")
+  val v1CartCreatedPersister: JsonPersister[CartCreatedV1, V1] =
+    persister[CartCreatedV1]("cart-created")
 
-  val v2CartCreatedPersister = persister[CartCreatedV2, V2](
-    "cart-created",
-    from[V1].to[V2](_.update('cart / 'items / * / 'price ! set[Int](1000))))
+  val v2CartCreatedPersister: JsonPersister[CartCreatedV2, V2] =
+    persister[CartCreatedV2, V2](
+      "cart-created",
+      from[V1].to[V2](_.update(Symbol("cart") / Symbol("items") / * / Symbol("price") ! set[Int](1000))))
 
-  val v3CartCreatedPersister = persister[CartCreatedV3, V3](
-    "cart-created",
-    from[V1]
-      .to[V2](_.update('cart / 'items / * / 'price ! set[Int](1000)))
-      .to[V3](_.update('timestamp ! set[Long](System.currentTimeMillis - 3600000L))))
+  val v3CartCreatedPersister: JsonPersister[CartCreatedV3, V3] =
+    persister[CartCreatedV3, V3](
+      "cart-created",
+      from[V1].to[V2](_.update(Symbol("cart") / Symbol("items") / * / Symbol("price") ! set[Int](1000)))
+        .to[V3](_.update(Symbol("timestamp") ! set[Long](System.currentTimeMillis - 3600000L)))
+    )
 
   "V1 persisters produced by SprayJsonPersister" should {
     "correctly persist and unpersist domain events " in {

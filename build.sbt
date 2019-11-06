@@ -5,8 +5,8 @@ lazy val basicSettings = Seq(
   organization := "com.scalapenos",
   version := "0.1.5-SNAPSHOT",
   licenses := Seq("The MIT License (MIT)" -> url("http://opensource.org/licenses/MIT")),
-  scalaVersion := "2.12.4",
-  crossScalaVersions := Seq("2.11.11", "2.12.4"),
+  scalaVersion := "2.13.1",
+  crossScalaVersions := Seq("2.11.11", "2.12.4", "2.13.1"),
   scalacOptions := Seq(
     "-encoding", "utf8",
     "-target:jvm-1.8",
@@ -16,9 +16,15 @@ lazy val basicSettings = Seq(
     "-language:_",
     "-Xlint",
     "-Xlog-reflective-calls",
-    "-Ywarn-unused",
-    "-Ywarn-unused-import"
-  )
+    "-Ywarn-unused"
+  ),
+  scalacOptions += {
+    if(scalaBinaryVersion.value == "2.13") {
+      "-Wunused:imports"
+    } else {
+      "-Ywarn-unused-import"
+    }
+  }
 )
 
 lazy val libSettings = basicSettings ++ publishingSettings
@@ -57,8 +63,7 @@ lazy val json = Project("stamina-json", file("stamina-json"))
     ) ++
     testDeps(
       scalatest,
-      jsonLenses,
-      sprayJsonShapeless
+      jsonLenses
     )
   )
   .enablePlugins(ReproducibleBuildsPlugin)

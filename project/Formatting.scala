@@ -17,6 +17,7 @@ object FormattingPlugin extends AutoPlugin {
         .setPreference(DoubleIndentConstructorArguments, true)
         .setPreference(DoubleIndentMethodDeclaration, true)
         .setPreference(RewriteArrowSymbols, true)
+        .setPreference(UseUnicodeArrows, false)
         .setPreference(DanglingCloseParenthesis, Preserve)
         .setPreference(NewlineAtEndOfFile, true)
     )
