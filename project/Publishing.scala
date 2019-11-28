@@ -4,23 +4,9 @@ import xerial.sbt.Sonatype._
 import SonatypeKeys._
 
 object Publishing {
-  lazy val publishingSettings = sonatypeSettings ++ Seq(
-    publishTo := {
-      val nexus = "https://oss.sonatype.org/"
-
-      if (isSnapshot.value)
-        Some("snapshots" at nexus + "content/repositories/snapshots")
-      else
-        Some("releases" at nexus + "service/local/staging/deploy/maven2")
-    },
-    credentials ++= (
-      for {
-        username ← sys.env.get("SONATYPE_USERNAME")
-        password ← sys.env.get("SONATYPE_PASSWORD")
-      } yield Credentials("Sonatype Nexus Repository Manager", "oss.sonatype.org", username, password)).toSeq,
-
+  lazy val publishingSettings = Seq(
+    homepage := Some(url("https://github.com/scalapenos/stamina")),
     pomExtra := (
-      <url>https://github.com/scalapenos/stamina</url>
       <developers>
         <developer>
           <id>agemooij</id>
@@ -31,6 +17,11 @@ object Publishing {
           <id>raboof</id>
           <name>Arnout Engelen</name>
           <url>http://github.com/raboof</url>
+        </developer>
+        <developer>
+          <id>larochef</id>
+          <name>François LAROCHE</name>
+          <url>http://github.com/larochef</url>
         </developer>
       </developers>))
 }
