@@ -6,7 +6,7 @@ import java.util.Base64
 
 import scala.util._
 
-trait StaminaTestKit { self: org.scalatest.WordSpecLike =>
+trait StaminaTestKit { self: org.scalatest.wordspec.AnyWordSpecLike =>
 
   val defaultSampleId = "default"
   case class PersistableSample[FromVersion <: Version: VersionInfo](sampleId: String, persistable: AnyRef, description: Option[String]) {
@@ -20,7 +20,7 @@ trait StaminaTestKit { self: org.scalatest.WordSpecLike =>
   def sample(sampleId: String, persistable: AnyRef) = new PersistableSample[V1](sampleId, persistable, Some(sampleId))
   def sample(sampleId: String, persistable: AnyRef, description: String) = new PersistableSample[V1](sampleId, persistable, Some(description))
 
-  implicit class TestablePersisters(persisters: Persisters) extends org.scalatest.Matchers {
+  implicit class TestablePersisters(persisters: Persisters) extends org.scalatest.matchers.should.Matchers {
     def generateTestsFor(samples: PersistableSample[_]*): Unit = {
       samples.foreach { sample =>
         generateRoundtripTestFor(sample)
