@@ -1,9 +1,4 @@
 Releasing:
 
-* remove '-SNAPSHOT' from version in project/Build.scala
-* commit as 'Preparing for release X'
-* sbt +publishSigned
-* sbt sonatypeRelease
-* bump version to next '-SNAPSHOT' in project/Build.scala
-* update README.md to recommend getting the newly released version
-* 'git push'
+* Create the release at https://github.com/scalapenos/stamina/releases/new with a 'v0.y.z' tag
+* Travis takes care of the rest. Don't worry about 'gpg-agent is not available in this session' errors.
